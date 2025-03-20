@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+###Google json
+google-services.json
