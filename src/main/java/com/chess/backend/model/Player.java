@@ -19,7 +19,8 @@ public class Player {
     private int matches;
     private int rank;
     private int win;
+    private int score;
     public Player GetPlayerInfo(){ 
-        return new Player(this.playerId,"",this.playerName, this.matches, this.rank, this.win);
+        return new Player(this.playerId,"",this.playerName, this.matches, this.rank, this.win, this.score);
     }
 }
