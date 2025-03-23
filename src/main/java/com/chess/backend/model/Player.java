@@ -20,7 +20,16 @@ public class Player {
     private int rank;
     private int win;
     private int score;
-    public Player GetPlayerInfo(){ 
-        return new Player(this.playerId,"",this.playerName, this.matches, this.rank, this.win, this.score);
+
+    public Player GetPlayerInfo() {
+        return new Player(this.playerId, "", this.playerName, this.matches, this.rank, this.win, this.score);
+    }
+
+    public double getRating() {
+        double rating = (double) win / matches;
+        return (double) Math.round(rating * 100.0) / 100.0;
+    }
+    public String getId(){
+        return playerId;
     }
 }
