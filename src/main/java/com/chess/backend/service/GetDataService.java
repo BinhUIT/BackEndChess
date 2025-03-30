@@ -1,6 +1,7 @@
 package com.chess.backend.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +31,9 @@ public class GetDataService {
         ApiFuture<QuerySnapshot> queries = collection.get(); 
         List<QueryDocumentSnapshot> documents = queries.get().getDocuments();
         return documents;
+    }
+    public void SetData(String collectionName, String documentName, Map<String,Object> data) {
+        DocumentReference docRef= fireStore.collection(collectionName).document(documentName);
+        docRef.set(data);
     }
 }
