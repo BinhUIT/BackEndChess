@@ -75,6 +75,18 @@ public class PlayerController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @GetMapping("/allPlayer") 
+    public ResponseEntity<List<Player>> GetAllPlayer() {
+        try {
+            List<Player> listPlayer = playerService.GetAllPlayer();
+            return new ResponseEntity<>(listPlayer, HttpStatus.OK);
+        } 
+        catch(InterruptedException|ExecutionException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
    
 
 }
