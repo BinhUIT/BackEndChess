@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.chess.backend.model.Player;
 import com.chess.backend.request.PlayerRegisterRequest;
-import com.google.cloud.firestore.DocumentReference;
+
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.FirebaseAuth;
@@ -48,8 +48,7 @@ public class PlayerService {
             data.put("score",0);
             getDataService.SetData("User", userRecord.getUid(), data);
             return new Player(userRecord.getUid(), request.getEmail(), request.getUserName(),0,0,0,0);
-
-
-        
     }
+
+   
 }
