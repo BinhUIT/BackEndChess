@@ -16,7 +16,7 @@ public class Match {
     private String matchId;
     private Player playerWhite;
     private Player playerBlack;
-    private MatchState matchState;
+    private EMatchState matchState;
     private int numberOfTurns;
     public Match(MatchReferenceModel matchReferenceModel) {
         this.matchId=matchReferenceModel.getMatchId();

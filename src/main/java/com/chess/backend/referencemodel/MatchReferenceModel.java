@@ -1,6 +1,6 @@
 package com.chess.backend.referencemodel;
 
-import com.chess.backend.model.MatchState;
+import com.chess.backend.model.EMatchState;
 import com.google.cloud.firestore.DocumentReference;
 
 import lombok.AllArgsConstructor;
@@ -15,6 +15,6 @@ public class MatchReferenceModel {
     private String matchId;
     private DocumentReference playerWhite;
     private DocumentReference playerBlack;
-    private MatchState matchState;
+    private EMatchState matchState;
     private int numberOfTurns;
 }
