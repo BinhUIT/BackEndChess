@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.chess.backend.model.Player;
 import com.chess.backend.request.PlayerRegisterRequest;
-
+import com.chess.backend.request.PlayerUpdateRequest;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
@@ -76,6 +76,23 @@ public class PlayerService {
             }
         } 
         listPlayers.get(listPlayers.size()-1).setRank(currentRank);
+   }
+   public Player UpdatePlayer(PlayerUpdateRequest request, String playerUID) throws InterruptedException, ExecutionException {
+        Player player= GetPlayerById(playerUID);
+        if(player==null) {
+            return null;
+        }
+        player.setPlayerName(request.getPlayerName());
+        HashMap<String,Object> data = new HashMap<>();
+        data.put("playerId",player.getPlayerId());
+        data.put("email",player.getEmail());
+        data.put("matches",player.getMatches());
+        data.put("rank",player.getRank());
+        data.put("score",player.getScore());
+        data.put("win",player.getWin());
+        data.put("playerName",request.getPlayerName());
+        getDataService.SetData("User", playerUID, data); 
+        return player;
    }
 
    

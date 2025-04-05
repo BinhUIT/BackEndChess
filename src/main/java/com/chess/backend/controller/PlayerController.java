@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 import com.chess.backend.request.PlayerRegisterRequest;
+import com.chess.backend.request.PlayerUpdateRequest;
 import com.chess.backend.service.FirebaseAuthService;
 import com.chess.backend.service.MatchService;
 import com.chess.backend.service.PlayerService;
@@ -85,6 +87,28 @@ public class PlayerController {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PutMapping("/player/update") 
+    public ResponseEntity<Player> UpdatePlayer(@RequestHeader("Authorization") String tokenString, @RequestBody PlayerUpdateRequest request) {
+        String token= tokenString.substring(7);
+        try {
+            String userUID= firebaseAuthService.getUidFromToken(token);
+            Player p=playerService.UpdatePlayer(request, userUID);
+            if(p==null) {
+                return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+            } 
+            return new ResponseEntity<>(p,HttpStatus.OK);
+        } 
+        catch(FirebaseAuthException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
+        }
+        catch(InterruptedException|ExecutionException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
     
    
