@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 import com.chess.backend.referencemodel.MatchReferenceModel;
-import com.chess.backend.service.GetDataService;
+
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
