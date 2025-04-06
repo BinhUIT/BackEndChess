@@ -1,7 +1,9 @@
 package com.chess.backend.model;
 
+import java.util.Date;
+
 import com.chess.backend.referencemodel.MatchReferenceModel;
-import com.google.cloud.firestore.DocumentReference;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,13 +18,15 @@ public class Match {
     private String matchId;
     private Player playerWhite;
     private Player playerBlack;
-    private MatchState matchState;
+    private EMatchState matchState;
     private int numberOfTurns;
+    private Date matchTime;
     public Match(MatchReferenceModel matchReferenceModel) {
         this.matchId=matchReferenceModel.getMatchId();
         this.matchState=matchReferenceModel.getMatchState();
         this.playerWhite=null;
         this.playerBlack=null;
         this.numberOfTurns=matchReferenceModel.getNumberOfTurns();
+        this.matchTime=matchReferenceModel.getMatchTime();
     }
 }

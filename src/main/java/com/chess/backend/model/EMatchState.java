@@ -1,6 +1,6 @@
 package com.chess.backend.model;
 
-public enum MatchState {
+public enum EMatchState {
 
     WHITE_WIN,
     BLACK_WIN,
