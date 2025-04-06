@@ -1,5 +1,7 @@
 package com.chess.backend.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.chess.backend.model.Player;
+
+import com.chess.backend.repository.FireBasePlayerRepository;
+import com.chess.backend.repository.PlayerRepository;
 import com.chess.backend.request.PlayerRegisterRequest;
 import com.chess.backend.request.PlayerUpdateRequest;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -20,24 +25,50 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
+
 @Service
 public class PlayerService {
-    @Autowired 
+
+    @Autowired
     private Firestore firestore;
     @Autowired
     private GetDataService getDataService;
 
+    private final FireBasePlayerRepository playerRepository;
+
+    public PlayerService(FireBasePlayerRepository playerRepository) {
+        this.playerRepository = playerRepository;
+    }
+
     public Player GetPlayerById(String playerId) throws InterruptedException, ExecutionException {
-        DocumentSnapshot snap = getDataService.GetDataSnapShot("User", playerId); 
-        if(snap.exists()) {
-            
+        DocumentSnapshot snap = getDataService.GetDataSnapShot("User", playerId);
+        if (snap.exists()) {
             return snap.toObject(Player.class);
-        } 
+        }
+        return null;
+    }
+    public Player GetPlayerByPlayerName(String playerName) throws InterruptedException, ExecutionException {
+        DocumentSnapshot snap = getDataService.GetDataSnapShot("User", playerName);
+        if (snap.exists()) {
+            return snap.toObject(Player.class);
+        }
         return null;
     }
 
+    public Player savePlayer(Player player) {
+        return playerRepository.savePlayer(player);
+    }
+
+    public Player updatePlayer(Player player) {
+        return playerRepository.updatePlayer(player);
+    }
+
+    public void deletePlayer(String id) {
+        playerRepository.deleteByPlayerId(id);
+    }
+
     public Player RegisterPlayer(PlayerRegisterRequest request) throws InterruptedException, ExecutionException, FirebaseAuthException {
-        
+    
             UserRecord.CreateRequest createRequest = new UserRecord.CreateRequest()
             .setEmail(request.getEmail())
             .setPassword(request.getPassword());
@@ -63,10 +94,9 @@ public class PlayerService {
                 listPlayer.add(p.GetPlayerInfo());
             }
         }
-        Collections.sort(listPlayer);
-        EditPlayerRank(listPlayer);
         return listPlayer;
    }
+  
    public void EditPlayerRank(List<Player> listPlayers) {
         int currentRank=1;
         for(int i=0;i<listPlayers.size()-1;i++) {
@@ -94,6 +124,4 @@ public class PlayerService {
         getDataService.SetData("User", playerUID, data); 
         return player;
    }
-
-   
 }

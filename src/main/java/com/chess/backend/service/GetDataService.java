@@ -16,7 +16,7 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 
 @Component
-public class GetDataService { 
+public class GetDataService {
     @Autowired
     private Firestore fireStore;
     public DocumentSnapshot GetDataSnapShot(String collectionName, String documentName) throws InterruptedException, ExecutionException {
