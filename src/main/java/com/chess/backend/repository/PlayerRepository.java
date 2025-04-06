@@ -1,14 +1,18 @@
 package com.chess.backend.repository;
 
+import java.util.List;
+
 import com.chess.backend.model.Player;
 
-public interface PlayerRepository {
+public interface PlayerRepository{
     // Save a player to Firebase
-    Player save(Player player);
+    Player savePlayer(Player player);
 
     // Update a player
-    Player update(Player player);
+    Player updatePlayer(Player player);
 
     // Delete a player by ID
-    void deleteById(String id);
+    void deleteByPlayerId(String id);
+
+    List<Player> getAllPlayers();
 }

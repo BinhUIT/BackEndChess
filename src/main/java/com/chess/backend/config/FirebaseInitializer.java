@@ -15,7 +15,7 @@ import jakarta.annotation.PostConstruct;
 public class FirebaseInitializer {
     @PostConstruct
     public void initialize() throws IOException {
-        FileInputStream fileInputStream = new FileInputStream("D:\\BackEndChess\\backend\\BackEndChess\\chess-mobile-ae140-firebase-adminsdk-fbsvc-b839b0d449.json");
+        FileInputStream fileInputStream = new FileInputStream("C:\\Users\\VanDai\\Documents\\Githup\\chess-mobile-ae140-firebase-adminsdk-fbsvc-b839b0d449.json");
         FirebaseOptions firebaseOptions= new FirebaseOptions.Builder()
                                             .setCredentials(GoogleCredentials.fromStream(fileInputStream)).build();
         FirebaseApp.initializeApp(firebaseOptions);
