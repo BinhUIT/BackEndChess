@@ -1,8 +1,5 @@
 package com.chess.backend.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

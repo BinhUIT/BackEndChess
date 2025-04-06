@@ -18,28 +18,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 
 import com.chess.backend.request.LoginRequest;
-import com.chess.backend.response.LoginResponse;
 import com.chess.backend.service.PlayerService;
-import com.chess.backend.utils.JwtUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import com.chess.backend.request.PlayerRegisterRequest;
 import com.chess.backend.request.PlayerUpdateRequest;
 import com.chess.backend.service.FirebaseAuthService;
 import com.chess.backend.service.MatchService;
-import com.chess.backend.service.PlayerService;
 
 @Controller
 @RequiredArgsConstructor
@@ -133,18 +127,6 @@ public class PlayerController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @GetMapping("/allPlayer") 
-    public ResponseEntity<List<Player>> GetAllPlayer() {
-        try {
-            List<Player> listPlayer = playerService.GetAllPlayer();
-            return new ResponseEntity<>(listPlayer, HttpStatus.OK);
-        } 
-        catch(InterruptedException|ExecutionException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     @PutMapping("/player/update") 
     public ResponseEntity<Player> UpdatePlayer(@RequestHeader("Authorization") String tokenString, @RequestBody PlayerUpdateRequest request) {
         String token= tokenString.substring(7);

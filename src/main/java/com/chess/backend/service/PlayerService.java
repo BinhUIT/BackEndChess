@@ -1,10 +1,7 @@
 package com.chess.backend.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.chess.backend.model.Player;
 
 import com.chess.backend.repository.FireBasePlayerRepository;
-import com.chess.backend.repository.PlayerRepository;
 import com.chess.backend.request.PlayerRegisterRequest;
 import com.chess.backend.request.PlayerUpdateRequest;
 import com.google.cloud.firestore.DocumentSnapshot;
