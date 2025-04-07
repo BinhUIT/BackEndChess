@@ -84,7 +84,7 @@ public class PlayerController {
         } catch (FirebaseAuthException e) {
             return ResponseEntity.status(401).body("Invalid UID");
         }
-    }
+    } 
     @GetMapping("/allPlayer")
     public ResponseEntity<List<Player>> GetAllPlayer() {
         try {
@@ -146,9 +146,5 @@ public class PlayerController {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
     }
-    
-   
-
 }
