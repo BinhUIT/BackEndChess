@@ -1,6 +1,7 @@
 package com.chess.backend.request;
 
 import com.google.auto.value.AutoValue.Builder;
+import com.google.firebase.database.annotations.NotNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,5 +14,6 @@ import lombok.Setter;
 @Setter
 @Builder
 public class PlayerUpdateRequest {
+    @NotNull
     private String playerName;
 }
