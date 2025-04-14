@@ -2,6 +2,7 @@ package com.chess.backend.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
@@ -19,6 +21,7 @@ import com.chess.backend.ServerApplication;
 import com.chess.backend.model.Match;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.JoinMatchRequest;
+import com.chess.backend.request.MoveRequest;
 import com.chess.backend.response.MatchResponse;
 import com.chess.backend.service.MatchService;
 
@@ -87,9 +90,49 @@ public class MatchController {
         }
     }
 
+    @MessageMapping("/chess/start") 
+    public ResponseEntity<String> StartMatch(@Payload int currentMatchId) {
+        try {
+            matchService.StartGame(currentMatchId);
+            return new ResponseEntity<>("Success", HttpStatus.OK);
+        }
+        catch(InterruptedException|ExecutionException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        } 
+        catch(Exception e) {
+            if(e.getMessage().equals("Match not found")) {
+                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
+            } 
+            if(e.getMessage().equals("Player not found")) {
+                return new ResponseEntity<>("Player not found", HttpStatus.NOT_FOUND);
+            } 
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @MessageMapping("/chess/move") 
+    public ResponseEntity<String> Move(@Payload  MoveRequest request) {
+        try {
+            matchService.PlayerMove(request); 
+            return new ResponseEntity<>("Success", HttpStatus.OK);
+        } 
+        catch(InterruptedException|ExecutionException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        } 
+        catch(Exception e) {
+            if(e.getMessage().equals("Match not found")) {
+                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
+            } 
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     @SubscribeMapping("/topic/match/{matchId}")
     public void subscribeToMatch(@DestinationVariable String matchId){
 
     }
 
+    
 }

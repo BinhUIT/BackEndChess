@@ -9,14 +9,20 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.chess.backend.model.EMatchState;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
+import com.chess.backend.model.game_state.Board;
+import com.chess.backend.model.game_state.EPlayer;
+import com.chess.backend.model.game_state.GameState;
 import com.chess.backend.referencemodel.MatchReferenceModel;
 import com.chess.backend.repository.FireBasePlayerRepository;
+import com.chess.backend.repository.MatchRepository;
 import com.chess.backend.request.CreateMatchRequest;
+import com.chess.backend.request.MoveRequest;
 import com.google.api.client.util.DateTime;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
@@ -37,6 +43,12 @@ public class MatchService {
 
     @Autowired
     private final FireBasePlayerRepository playerRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
+
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     public List<Match> listMatch() throws InterruptedException, ExecutionException {
         List<QueryDocumentSnapshot> listSnapshots = getDataService.GetAllDocumentSnapshot("Match");
@@ -190,5 +202,51 @@ public class MatchService {
         }
         
         return match;
+    }
+
+    public void PlayerMove(MoveRequest request) throws InterruptedException, ExecutionException,Exception { 
+        DocumentSnapshot document;
+        try {
+             document= getDataService.GetDataSnapShot("Matches",request.getCurrentMatchId());
+        }
+        catch(InterruptedException|ExecutionException e) {
+            
+            throw e;
+        }
+        if(!document.exists()) {
+            throw new Exception("Match not found");
+        } 
+        Match match = document.toObject(Match.class);
+        if(match==null) {
+            throw new Exception("Err");
+        }
+        match.setNumberOfTurns(match.getNumberOfTurns()+1); 
+        matchRepository.saveMatch(match);
+        simpMessagingTemplate.convertAndSend("/topic/match/"+request.getCurrentMatchId(),request.getGameState());
+    }
+
+    public void StartGame(int currentMatchId) throws InterruptedException,ExecutionException,Exception {
+        DocumentSnapshot document;
+        try {
+             document= getDataService.GetDataSnapShot("Matches",Integer.toString(currentMatchId));
+        }
+        catch(InterruptedException|ExecutionException e) {
+            
+            throw e;
+        }
+        if(!document.exists()) {
+            throw new Exception("Match not found");
+            
+        }
+        String playerWhiteId = document.get("playerWhiteId",String.class);
+        String playerBlackId = document.get("playerBlackId", String.class);
+        if(playerWhiteId==null||playerBlackId==null||playerBlackId.equals("")||playerWhiteId.equals("")) {
+            throw new Exception("Player not found");
+        }
+        Board board = new Board();
+        GameState whiteGameState = new GameState(EPlayer.WHITE,board);
+        
+        simpMessagingTemplate.convertAndSend("/topic/match/"+currentMatchId,whiteGameState); 
+        
     }
 }
