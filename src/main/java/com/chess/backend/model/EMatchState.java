@@ -4,5 +4,7 @@ public enum EMatchState {
 
     WHITE_WIN,
     BLACK_WIN,
-    DRAW
+    DRAW,
+    WAITING_FOR_PLAYER,
+    IN_PROGRESS
 }

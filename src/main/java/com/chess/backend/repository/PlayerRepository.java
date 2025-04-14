@@ -15,4 +15,6 @@ public interface PlayerRepository{
     void deleteByPlayerId(String id);
 
     List<Player> getAllPlayers();
+
+    Player findPlayerById(String playerId);
 }
