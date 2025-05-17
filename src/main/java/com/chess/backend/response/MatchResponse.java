@@ -13,6 +13,7 @@ public class MatchResponse {
     private String playerBlackId;
     private String matchState;
     private int numberOfTurns;
+    private int playTime;
     private Date matchTime;
     private String ErrorMessage;
     
@@ -22,6 +23,7 @@ public class MatchResponse {
         this.playerBlackId = match.getPlayerBlack() != null ? match.getPlayerBlack().getId() : null;
         this.matchState = match.getMatchState().toString();
         this.numberOfTurns = match.getNumberOfTurns();
+        this.playTime=match.getPlayTime();
         this.matchTime = match.getMatchTime();
     }
     public MatchResponse(String error){

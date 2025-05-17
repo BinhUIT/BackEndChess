@@ -27,5 +27,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // Cho phép tất cả origin (nên hạn chế trong production)
                 .withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*");
     }
 }

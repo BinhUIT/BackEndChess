@@ -14,7 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Match { 
+public class Match {
     @NotNull
     private String matchId;
     @NotNull
@@ -24,6 +24,10 @@ public class Match {
     @NotNull
     private EMatchState matchState;
     @NotNull
+    private EMatchType matchType;
+    @NotNull
+    private Integer playTime;
+    @NotNull
     private int numberOfTurns;
     @NotNull
     private Date matchTime;
@@ -32,6 +36,8 @@ public class Match {
         this.matchState=matchReferenceModel.getMatchState();
         this.playerWhite=null;
         this.playerBlack=null;
+        this.matchType=matchReferenceModel.getMatchType();
+        this.playTime=matchReferenceModel.getPlayTime();
         this.numberOfTurns=matchReferenceModel.getNumberOfTurns();
         this.matchTime=matchReferenceModel.getMatchTime();
     }

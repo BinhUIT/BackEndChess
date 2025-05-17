@@ -14,7 +14,7 @@ import com.google.firebase.cloud.FirestoreClient;
 @Repository
 public class FireBaseMatchRepository implements MatchRepository {
     private Firestore dbFirestore;
-    private final String COLLECTION_NAME="Match";
+    private final String COLLECTION_NAME="Matches";
 
     public FireBaseMatchRepository(){
         this.dbFirestore=FirestoreClient.getFirestore();
@@ -29,6 +29,11 @@ public class FireBaseMatchRepository implements MatchRepository {
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Failed to save match", e);
         }
+    }
+
+    @Override
+    public void updateMatch(Match match){
+        
     }
     
 }
