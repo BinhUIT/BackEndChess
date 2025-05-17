@@ -14,7 +14,7 @@ import com.google.firebase.cloud.FirestoreClient;
 @Repository
 public class FireBaseMatchRepository implements MatchRepository {
     private Firestore dbFirestore;
-    private final String COLLECTION_NAME="Matches";
+    private final String COLLECTION_NAME="Match";
 
     public FireBaseMatchRepository(){
         this.dbFirestore=FirestoreClient.getFirestore();

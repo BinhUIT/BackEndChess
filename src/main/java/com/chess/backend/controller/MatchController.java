@@ -104,7 +104,7 @@ public class MatchController {
                     }
                     // Nếu không tìm thấy match, người chơi vẫn ở trong hàng đợi
                 } else {
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/matchmaking/error",
+                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match/error",
                             new MatchResponse("ERROR: Cannot join matchmaking queue"));
                 }
             }
@@ -175,11 +175,6 @@ public class MatchController {
             e.printStackTrace();
             return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    @SubscribeMapping("/topic/match/{matchId}")
-    public void subscribeToMatch(@DestinationVariable String matchId) {
-
     }
 
 }

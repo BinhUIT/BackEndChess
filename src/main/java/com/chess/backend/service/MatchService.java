@@ -164,7 +164,7 @@ public class MatchService {
     }
 
     public Match joinMatch(String matchId, String playerId) throws InterruptedException, ExecutionException {
-        DocumentSnapshot document = getDataService.GetDataSnapShot("Matches", matchId);
+        DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
 
         if (!document.exists()) {
             throw new RuntimeException("Match not found");
@@ -240,7 +240,7 @@ public class MatchService {
 
     public Match getMatchById(String matchId) throws InterruptedException, ExecutionException {
         // Lấy dữ liệu match từ Firebase
-        DocumentSnapshot document = getDataService.GetDataSnapShot("Matches", matchId);
+        DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
 
         if (!document.exists()) {
             return null;
@@ -256,8 +256,11 @@ public class MatchService {
         Match match = new Match(matchReferenceModel);
 
         // Thêm thông tin người chơi
-        String playerWhiteId = document.getString("playerWhiteId");
-        String playerBlackId = document.getString("playerBlackId");
+        String playerWhitePath = document.getString("playerWhite");
+        String playerBlackPath = document.getString("playerBlack");
+        //Lay playerId tu path
+        String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
+        String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
 
         if (playerWhiteId != null) {
             match.setPlayerWhite(playerRepository.findPlayerById(playerWhiteId));
@@ -302,8 +305,12 @@ public class MatchService {
             throw new Exception("Match not found");
 
         }
-        String playerWhiteId = document.get("playerWhiteId", String.class);
-        String playerBlackId = document.get("playerBlackId", String.class);
+        String playerWhitePath = document.get("playerWhite", String.class);
+        String playerBlackPath = document.get("playerBlack", String.class);
+        
+        String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
+        String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
+
         if (playerWhiteId == null || playerBlackId == null || playerBlackId.equals("") || playerWhiteId.equals("")) {
             throw new Exception("Player not found");
         }
