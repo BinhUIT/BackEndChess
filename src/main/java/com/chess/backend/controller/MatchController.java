@@ -26,6 +26,7 @@ import com.chess.backend.ServerApplication;
 import com.chess.backend.model.EMatchType;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
+import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.JoinMatchRequest;
 import com.chess.backend.request.MoveRequest;
@@ -164,6 +165,22 @@ public class MatchController {
     public ResponseEntity<String> Move(@Payload MoveRequest request) {
         try {
             matchService.PlayerMove(request);
+            return new ResponseEntity<>("Success", HttpStatus.OK);
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            if (e.getMessage().equals("Match not found")) {
+                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
+            }
+            e.printStackTrace();
+            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @MessageMapping("/chess/chat") 
+    public ResponseEntity<String> Chat(@Payload ChatRequest request) {
+        try {
+            matchService.PlayerChat(request);
             return new ResponseEntity<>("Success", HttpStatus.OK);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();

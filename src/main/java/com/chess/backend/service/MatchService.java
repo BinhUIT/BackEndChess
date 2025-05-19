@@ -23,6 +23,7 @@ import com.chess.backend.referencemodel.MatchReferenceModel;
 import com.chess.backend.repository.FireBaseMatchRepository;
 import com.chess.backend.repository.FireBasePlayerRepository;
 import com.chess.backend.repository.MatchRepository;
+import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.MoveRequest;
 import com.google.api.client.util.DateTime;
@@ -318,5 +319,22 @@ public class MatchService {
         GameState whiteGameState = new GameState(EPlayer.WHITE, board);
 
         simpMessagingTemplate.convertAndSend("/topic/match/" + currentMatchId, whiteGameState);
+    }
+    public void PlayerChat(ChatRequest request) throws InterruptedException,ExecutionException,Exception {
+        DocumentSnapshot document;
+        try {
+            document = getDataService.GetDataSnapShot("Match", request.getCurrentMatchId());
+        } catch (InterruptedException | ExecutionException e) {
+
+            throw e;
+        } 
+         if (!document.exists()) {
+            throw new Exception("Match not found");
+        }
+        Match match = document.toObject(Match.class);
+        if (match == null) {
+            throw new Exception("Err");
+        }
+        simpMessagingTemplate.convertAndSend("/topic/match/" + request.getCurrentMatchId(), request.getMessageContent());
     }
 }
