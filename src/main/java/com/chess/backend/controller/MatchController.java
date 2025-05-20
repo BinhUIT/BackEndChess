@@ -142,55 +142,46 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/start")
-    public ResponseEntity<String> StartMatch(@Payload int currentMatchId) {
+    public void StartMatch(@Payload int currentMatchId) {
         try {
             matchService.StartGame(currentMatchId);
-            return new ResponseEntity<>("Success", HttpStatus.OK);
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ;
         } catch (Exception e) {
-            if (e.getMessage().equals("Match not found")) {
-                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
-            }
-            if (e.getMessage().equals("Player not found")) {
-                return new ResponseEntity<>("Player not found", HttpStatus.NOT_FOUND);
-            }
-            e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+           e.printStackTrace();
+           return;
         }
     }
 
     @MessageMapping("/chess/move")
-    public ResponseEntity<String> Move(@Payload MoveRequest request) {
+    public void Move(@Payload MoveRequest request) {
         try {
             matchService.PlayerMove(request);
-            return new ResponseEntity<>("Success", HttpStatus.OK);
+            return ;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ;
         } catch (Exception e) {
             if (e.getMessage().equals("Match not found")) {
-                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
+                return ;
             }
             e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ;
         }
     }
     @MessageMapping("/chess/chat") 
-    public ResponseEntity<String> Chat(@Payload ChatRequest request) {
+    public void Chat(@Payload ChatRequest request) {
         try {
             matchService.PlayerChat(request);
-            return new ResponseEntity<>("Success", HttpStatus.OK);
+            return ;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ;
         } catch (Exception e) {
             if (e.getMessage().equals("Match not found")) {
-                return new ResponseEntity<>("Match not found", HttpStatus.NOT_FOUND);
+                return ;
             }
             e.printStackTrace();
-            return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ;
         }
     }
 
