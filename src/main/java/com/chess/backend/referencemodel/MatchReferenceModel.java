@@ -7,13 +7,11 @@ import com.chess.backend.model.EMatchType;
 import com.google.cloud.firestore.DocumentReference;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
+@Data
 public class MatchReferenceModel {
     private String matchId;
     private DocumentReference playerWhite;
