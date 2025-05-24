@@ -87,7 +87,7 @@ public class MatchController {
 
                 if (addedToQueue) {
                     // Thông báo cho người chơi rằng họ đã được thêm vào hàng đợi
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/matchmaking",
+                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match",
                             new MatchResponse("Added to matchmaking queue"));
 
                     // Tìm người chơi phù hợp và tạo match nếu có
@@ -102,6 +102,8 @@ public class MatchController {
 
                         // Xóa cả hai người chơi khỏi hàng đợi
                         matchmakingService.removePlayersFromQueue(match.getPlayerBlack(), match.getPlayerWhite());
+                        // Gửi GameState tới topic/match
+                        matchService.StartGame(match.getMatchId());
                     }
                     // Nếu không tìm thấy match, người chơi vẫn ở trong hàng đợi
                 } else {
@@ -142,7 +144,7 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/start")
-    public void StartMatch(@Payload int currentMatchId) {
+    public void StartMatch(@Payload String currentMatchId) {
         try {
             matchService.StartGame(currentMatchId);
             return ;

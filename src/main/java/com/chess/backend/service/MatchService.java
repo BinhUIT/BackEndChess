@@ -134,7 +134,7 @@ public class MatchService {
         // Tao HashMap de luu len FireBase
         Map<String, Object> data = new HashMap<>();
         data.put("matchId", matchId);
-        data.put("matchState", EMatchState.WAITING_FOR_PLAYER);
+        data.put("matchState", EMatchState.IN_PROGRESS);
         data.put("playerWhite", randomInt==0? playerPath : null);
         data.put("playerBlack", randomInt==0 ? null : playerPath);
         data.put("matchType", EMatchType.PRIVATE);
@@ -143,7 +143,7 @@ public class MatchService {
         data.put("matchTime", new Date());
 
         matchReferenceModel.setMatchId(matchId);
-        matchReferenceModel.setMatchState(EMatchState.WAITING_FOR_PLAYER);
+        matchReferenceModel.setMatchState(EMatchState.IN_PROGRESS);
         matchReferenceModel.setMatchType(request.getMatchType());
         matchReferenceModel.setPlayTime(request.getPlayTime());
         matchReferenceModel.setMatchTime(new Date());
@@ -294,10 +294,10 @@ public class MatchService {
         simpMessagingTemplate.convertAndSend("/topic/match/" + request.getCurrentMatchId(), request.getGameState());
     }
 
-    public void StartGame(int currentMatchId) throws InterruptedException, ExecutionException, Exception {
+    public void StartGame(String currentMatchId) throws InterruptedException, ExecutionException, Exception {
         DocumentSnapshot document;
         try {
-            document = getDataService.GetDataSnapShot("Matches", Integer.toString(currentMatchId));
+            document = getDataService.GetDataSnapShot("Matches", currentMatchId);
         } catch (InterruptedException | ExecutionException e) {
 
             throw e;
@@ -328,7 +328,7 @@ public class MatchService {
 
             throw e;
         } 
-         if (!document.exists()) {
+        if (!document.exists()) {
             throw new Exception("Match not found");
         }
         Match match = document.toObject(Match.class);
