@@ -5,21 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.http.protocol.HTTP;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
-import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.chess.backend.ServerApplication;
@@ -41,8 +36,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/match")
 @RequiredArgsConstructor
 public class MatchController {
-
-    private final ServerApplication serverApplication;
     @Autowired
     private MatchService matchService;
 
@@ -51,6 +44,7 @@ public class MatchController {
 
     @Autowired
     private final PlayerService playerService;
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/matches")
@@ -66,28 +60,34 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/create")
-    public void createMatch(@RequestBody CreateMatchRequest request, Principal principal) {
+    public void createMatch(CreateMatchRequest request, Principal principal, Message<?> message) {
+        System.out.println("🔥 Principal: " + (principal != null ? principal.getName() : "null"));
+        System.out.println("📦 Headers: " + message.getHeaders());
         try {
             if (request.getMatchType().equals(EMatchType.PRIVATE)) {
                 // Xử lý tạo match private
                 Match match = matchService.createPrivateMatch(request);
                 if (match != null) {
                     // Gửi thông tin match trực tiếp cho người tạo
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match", new MatchResponse(match));
+                    System.out.println("request playerID = " + request.getPlayerID());
+                    System.out.println("Match Response: ");
+                    System.out.println(match);
+                    messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match",
+                            new MatchResponse(match));
                 } else {
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match/error",
+                    messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match/error",
                             new MatchResponse("ERROR: Private match cannot be created"));
                 }
             } else if (request.getMatchType().equals(EMatchType.RANKED)) {
                 // Xử lý tạo match ranked - thêm người chơi vào hàng đợi
-                Player player = playerService.GetPlayerById(request.getPlayerID());
+                Player player = playerService.GetPlayerById(principal.getName());
 
                 // Thêm người chơi vào hàng đợi tìm trận
                 boolean addedToQueue = matchmakingService.addPlayerToQueue(player, request);
 
                 if (addedToQueue) {
                     // Thông báo cho người chơi rằng họ đã được thêm vào hàng đợi
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match",
+                    messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match",
                             new MatchResponse("Added to matchmaking queue"));
 
                     // Tìm người chơi phù hợp và tạo match nếu có
@@ -107,12 +107,12 @@ public class MatchController {
                     }
                     // Nếu không tìm thấy match, người chơi vẫn ở trong hàng đợi
                 } else {
-                    messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match/error",
+                    messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match/error",
                             new MatchResponse("ERROR: Cannot join matchmaking queue"));
                 }
             }
         } catch (Exception ex) {
-            messagingTemplate.convertAndSendToUser(request.getPlayerID(), "/queue/match/error",
+            messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match/error",
                     new MatchResponse("INTERNAL_SERVER_ERROR: " + ex.getMessage()));
         }
     }
@@ -147,10 +147,10 @@ public class MatchController {
     public void StartMatch(@Payload String currentMatchId) {
         try {
             matchService.StartGame(currentMatchId);
-            return ;
+            return;
         } catch (Exception e) {
-           e.printStackTrace();
-           return;
+            e.printStackTrace();
+            return;
         }
     }
 
@@ -158,32 +158,33 @@ public class MatchController {
     public void Move(@Payload MoveRequest request) {
         try {
             matchService.PlayerMove(request);
-            return ;
+            return;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-            return ;
+            return;
         } catch (Exception e) {
             if (e.getMessage().equals("Match not found")) {
-                return ;
+                return;
             }
             e.printStackTrace();
-            return ;
+            return;
         }
     }
-    @MessageMapping("/chess/chat") 
+
+    @MessageMapping("/chess/chat")
     public void Chat(@Payload ChatRequest request) {
         try {
             matchService.PlayerChat(request);
-            return ;
+            return;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-            return ;
+            return;
         } catch (Exception e) {
             if (e.getMessage().equals("Match not found")) {
-                return ;
+                return;
             }
             e.printStackTrace();
-            return ;
+            return;
         }
     }
 

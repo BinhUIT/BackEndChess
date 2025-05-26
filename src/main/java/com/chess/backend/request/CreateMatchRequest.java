@@ -3,9 +3,7 @@ package com.chess.backend.request;
 import com.chess.backend.model.EMatchType;
 import com.google.firebase.database.annotations.NotNull;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Data
 @NoArgsConstructor

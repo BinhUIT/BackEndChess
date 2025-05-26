@@ -122,6 +122,7 @@ public class MatchService {
         }
 
         firestore.collection("Match").document(matchId).set(data);
+        
         return match;
     }
 
