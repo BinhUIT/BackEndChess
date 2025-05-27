@@ -213,6 +213,7 @@ public class MatchService {
         matchReferenceModel.setMatchState(newState);
         matchReferenceModel.setNumberOfTurns(document.getLong("numberOfTurns").intValue());
         matchReferenceModel.setMatchTime(document.getDate("matchTime"));
+        matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
         Match match = new Match(matchReferenceModel);
 
