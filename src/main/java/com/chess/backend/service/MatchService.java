@@ -22,11 +22,10 @@ import com.chess.backend.model.game_state.GameState;
 import com.chess.backend.referencemodel.MatchReferenceModel;
 import com.chess.backend.repository.FireBaseMatchRepository;
 import com.chess.backend.repository.FireBasePlayerRepository;
-import com.chess.backend.repository.MatchRepository;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.MoveRequest;
-import com.google.api.client.util.DateTime;
+import com.chess.backend.response.MatchResponse;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -122,7 +121,7 @@ public class MatchService {
         }
 
         firestore.collection("Match").document(matchId).set(data);
-        
+
         return match;
     }
 
@@ -130,14 +129,14 @@ public class MatchService {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
         String matchId = UUID.randomUUID().toString();
         String playerPath = "/User/" + request.getPlayerID();
-        //random 0 hoặc 1
-        int randomInt=(int) (Math.random()*2);
+        // random 0 hoặc 1
+        int randomInt = (int) (Math.random() * 2);
         // Tao HashMap de luu len FireBase
         Map<String, Object> data = new HashMap<>();
         data.put("matchId", matchId);
         data.put("matchState", EMatchState.IN_PROGRESS);
-        data.put("playerWhite", randomInt==0? playerPath : null);
-        data.put("playerBlack", randomInt==0 ? null : playerPath);
+        data.put("playerWhite", randomInt == 0 ? playerPath : null);
+        data.put("playerBlack", randomInt == 0 ? null : playerPath);
         data.put("matchType", EMatchType.PRIVATE);
         data.put("playTime", request.getPlayTime());
         data.put("numberOfTurns", 0);
@@ -261,7 +260,7 @@ public class MatchService {
         // Thêm thông tin người chơi
         String playerWhitePath = document.getString("playerWhite");
         String playerBlackPath = document.getString("playerBlack");
-        //Lay playerId tu path
+        // Lay playerId tu path
         String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
         String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
 
@@ -310,7 +309,7 @@ public class MatchService {
         }
         String playerWhitePath = document.get("playerWhite", String.class);
         String playerBlackPath = document.get("playerBlack", String.class);
-        
+
         String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
         String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
 
@@ -322,14 +321,15 @@ public class MatchService {
 
         simpMessagingTemplate.convertAndSend("/topic/match/" + currentMatchId, whiteGameState);
     }
-    public void PlayerChat(ChatRequest request) throws InterruptedException,ExecutionException,Exception {
+
+    public void PlayerChat(ChatRequest request) throws InterruptedException, ExecutionException, Exception {
         DocumentSnapshot document;
         try {
             document = getDataService.GetDataSnapShot("Match", request.getCurrentMatchId());
         } catch (InterruptedException | ExecutionException e) {
 
             throw e;
-        } 
+        }
         if (!document.exists()) {
             throw new Exception("Match not found");
         }
@@ -337,6 +337,37 @@ public class MatchService {
         if (match == null) {
             throw new Exception("Err");
         }
-        simpMessagingTemplate.convertAndSend("/topic/match/" + request.getCurrentMatchId(), request.getMessageContent());
+        simpMessagingTemplate.convertAndSend("/topic/match/" + request.getCurrentMatchId(),
+                request.getMessageContent());
+    }
+
+    public MatchResponse cancelMatch(String matchId, String playerId) throws InterruptedException, ExecutionException {
+        DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
+
+        String playerWhitePath = document.getString("playerWhite");
+        String playerBlackPath = document.getString("playerBlack");
+
+        MatchResponse response = new MatchResponse(document.toObject(Match.class));
+
+        Map<String, Object> updates = new HashMap<>();
+
+        String playerPath = "/User/" + playerId;
+
+        if (playerWhitePath != null && playerWhitePath.equals(playerPath)) {
+            updates.put("playerWhitePath", null);
+            response.setPlayerWhiteId(null);
+        }
+        if (playerBlackPath != null && playerBlackPath.equals(playerPath)) {
+            updates.put("playerBlackPath", null);
+            response.setPlayerBlackId(null);
+        }
+        updates.put("matchState", EMatchState.WAITING_FOR_PLAYER.toString());
+
+        // update match len firebase
+        firestore.collection("Match").document(matchId).update(updates);
+
+        // tra match ve kenh
+        response.setMatchState(EMatchState.WAITING_FOR_PLAYER.toString());
+        return response;
     }
 }

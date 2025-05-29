@@ -21,6 +21,7 @@ import com.chess.backend.ServerApplication;
 import com.chess.backend.model.EMatchType;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
+import com.chess.backend.request.CancelMatchRequest;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.JoinMatchRequest;
@@ -188,4 +189,13 @@ public class MatchController {
         }
     }
 
+    @MessageMapping("/chess/cancelMatch")
+    public void cancelMatch(@Payload CancelMatchRequest request){
+        try{
+            MatchResponse response = matchService.cancelMatch(request.getMatchId(), request.getPlayerId());
+            messagingTemplate.convertAndSend("/topic/match/" + request.getMatchId(), response);
+        }catch(Exception exception){
+            messagingTemplate.convertAndSend("topic/match/" + request.getMatchId() +"/error", exception.getMessage());
+        }
+    }
 }

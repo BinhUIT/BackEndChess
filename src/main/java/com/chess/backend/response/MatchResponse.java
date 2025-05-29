@@ -5,8 +5,10 @@ import java.util.Date;
 import com.chess.backend.model.Match;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class MatchResponse {
     private String matchId;
     private String playerWhiteId;
