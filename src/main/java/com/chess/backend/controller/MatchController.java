@@ -2,6 +2,7 @@ package com.chess.backend.controller;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -190,12 +191,18 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/cancelMatch")
-    public void cancelMatch(@Payload CancelMatchRequest request){
-        try{
+    public void cancelMatch(@Payload CancelMatchRequest request) {
+        try {
             MatchResponse response = matchService.cancelMatch(request.getMatchId(), request.getPlayerId());
             messagingTemplate.convertAndSend("/topic/match/" + request.getMatchId(), response);
-        }catch(Exception exception){
-            messagingTemplate.convertAndSend("topic/match/" + request.getMatchId() +"/error", exception.getMessage());
+        } catch (Exception exception) {
+            exception.printStackTrace(); // 👈 log server
+            messagingTemplate.convertAndSend("/topic/match/" + request.getMatchId() + "/error",
+                    exception.toString() + "\n" + Arrays.toString(exception.getStackTrace()));
         }
+    }
+    @MessageMapping("/chess/destroyMatch/{matchId}")
+    public void destroyMatch(@DestinationVariable String matchId){
+        messagingTemplate.convertAndSend("/topic/match/" + matchId, "destroyed");
     }
 }

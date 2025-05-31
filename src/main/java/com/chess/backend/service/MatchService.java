@@ -1,5 +1,6 @@
 package com.chess.backend.service;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -89,7 +90,7 @@ public class MatchService {
 
     public Match createPrivateMatch(CreateMatchRequest request) {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
-        String matchId = UUID.randomUUID().toString();
+        String matchId = generateMatchId();
         String playerPath = "/User/" + request.getPlayerID();
         // Tao HashMap de luu len FireBase
         Map<String, Object> data = new HashMap<>();
@@ -127,7 +128,7 @@ public class MatchService {
 
     public Match createRankedMatch(CreateMatchRequest request, Player opponent) {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
-        String matchId = UUID.randomUUID().toString();
+        String matchId = generateMatchId();
         String playerPath = "/User/" + request.getPlayerID();
         // random 0 hoặc 1
         int randomInt = (int) (Math.random() * 2);
@@ -164,6 +165,20 @@ public class MatchService {
         return match;
     }
 
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int LENGTH = 6;
+    private static final SecureRandom random = new SecureRandom();
+
+    public static String generateMatchId() {
+        StringBuilder sb = new StringBuilder(LENGTH);
+        for (int i = 0; i < LENGTH; i++) {
+            int index = random.nextInt(CHARACTERS.length());
+            sb.append(CHARACTERS.charAt(index));
+        }
+        return sb.toString();
+    }
+
+
     public Match joinMatch(String matchId, String playerId) throws InterruptedException, ExecutionException {
         DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
 
@@ -190,7 +205,7 @@ public class MatchService {
             updates.put("playerWhite", playerPath);
             playerWhitePath = playerPath;
         } else if (playerBlackPath == null) {
-            updates.put("playerBlackId", playerPath);
+            updates.put("playerBlack", playerPath);
             playerBlackPath = playerPath;
         } else {
             throw new RuntimeException("Match is full");
@@ -347,18 +362,24 @@ public class MatchService {
         String playerWhitePath = document.getString("playerWhite");
         String playerBlackPath = document.getString("playerBlack");
 
-        MatchResponse response = new MatchResponse(document.toObject(Match.class));
-
+        MatchResponse response = new MatchResponse();
+        response.setMatchId(matchId);
+        response.setMatchState(EMatchState.WAITING_FOR_PLAYER.toString());
+        response.setNumberOfTurns(document.getLong("numberOfTurns").intValue());
+        response.setPlayTime(document.getLong("playTime").intValue());
+        response.setMatchTime(document.getDate("matchTime"));
+        response.setPlayerBlackId(document.getString("playerBlack"));
+        response.setPlayerWhiteId(document.getString("playerWhite"));
         Map<String, Object> updates = new HashMap<>();
 
         String playerPath = "/User/" + playerId;
 
         if (playerWhitePath != null && playerWhitePath.equals(playerPath)) {
-            updates.put("playerWhitePath", null);
+            updates.put("playerWhite", null);
             response.setPlayerWhiteId(null);
         }
         if (playerBlackPath != null && playerBlackPath.equals(playerPath)) {
-            updates.put("playerBlackPath", null);
+            updates.put("playerBlack", null);
             response.setPlayerBlackId(null);
         }
         updates.put("matchState", EMatchState.WAITING_FOR_PLAYER.toString());
