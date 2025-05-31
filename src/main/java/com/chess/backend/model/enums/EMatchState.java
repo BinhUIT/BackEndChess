@@ -1,4 +1,4 @@
-package com.chess.backend.model;
+package com.chess.backend.model.enums;
 
 public enum EMatchState {
 

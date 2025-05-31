@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import com.chess.backend.model.EMatchState;
-import com.chess.backend.model.EMatchType;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
+import com.chess.backend.model.enums.EMatchState;
+import com.chess.backend.model.enums.EMatchType;
 import com.chess.backend.model.game_state.Board;
 import com.chess.backend.model.game_state.EPlayer;
 import com.chess.backend.model.game_state.GameState;
