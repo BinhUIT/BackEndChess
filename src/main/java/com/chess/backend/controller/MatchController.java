@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.chess.backend.ServerApplication;
-import com.chess.backend.model.EMatchType;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
+import com.chess.backend.model.enums.EMatchType;
 import com.chess.backend.request.CancelMatchRequest;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
@@ -73,7 +73,7 @@ public class MatchController {
                     // Gửi thông tin match trực tiếp cho người tạo
                     System.out.println("request playerID = " + request.getPlayerID());
                     System.out.println("Match Response: ");
-                    System.out.println(match);
+                    System.out.println(match.getMatchId());
                     messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match",
                             new MatchResponse(match));
                 } else {
@@ -156,7 +156,7 @@ public class MatchController {
         }
     }
 
-    @MessageMapping("/chess/move")
+    @MessageMapping("/chess/move/{matchId}")
     public void Move(@Payload MoveRequest request) {
         try {
             matchService.PlayerMove(request);
