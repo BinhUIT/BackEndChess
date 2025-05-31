@@ -72,7 +72,7 @@ public class MatchController {
                     // Gửi thông tin match trực tiếp cho người tạo
                     System.out.println("request playerID = " + request.getPlayerID());
                     System.out.println("Match Response: ");
-                    System.out.println(match);
+                    System.out.println(match.getMatchId());
                     messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match",
                             new MatchResponse(match));
                 } else {
