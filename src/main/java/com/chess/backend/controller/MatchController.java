@@ -155,7 +155,7 @@ public class MatchController {
         }
     }
 
-    @MessageMapping("/chess/move")
+    @MessageMapping("/chess/move/{matchId}")
     public void Move(@Payload MoveRequest request) {
         try {
             matchService.PlayerMove(request);

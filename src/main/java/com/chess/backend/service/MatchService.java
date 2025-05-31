@@ -292,7 +292,7 @@ public class MatchService {
         }
         match.setNumberOfTurns(match.getNumberOfTurns() + 1);
         fireBaseMatchRepository.saveMatch(match);
-        simpMessagingTemplate.convertAndSend("/topic/match/" + request.getCurrentMatchId(), request.getGameState());
+        simpMessagingTemplate.convertAndSend("/chess/move/" + request.getCurrentMatchId(), request.getGameState());
     }
 
     public void StartGame(String currentMatchId) throws InterruptedException, ExecutionException, Exception {
