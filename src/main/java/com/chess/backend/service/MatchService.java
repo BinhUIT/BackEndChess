@@ -319,8 +319,8 @@ public class MatchService {
             matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
             Match match = new Match(matchReferenceModel);
-            String playerWhiteId = (playerWhitePath==null)? playerId: extractPlayerIdFromPath(playerWhitePath);
-            String playerBlackId = (playerBlackPath==null)? playerId: extractPlayerIdFromPath(playerBlackPath);
+            String playerWhiteId = (playerWhitePath == null) ? playerId : extractPlayerIdFromPath(playerWhitePath);
+            String playerBlackId = (playerBlackPath == null) ? playerId : extractPlayerIdFromPath(playerBlackPath);
 
             // Thêm các người chơi vào match
             match.setPlayerWhite(fetchPlayer(playerWhiteId));
@@ -447,7 +447,7 @@ public class MatchService {
         Board board = new Board();
         GameState whiteGameState = new GameState(EPlayer.WHITE, board);
 
-        simpMessagingTemplate.convertAndSend("/topic/match/" + currentMatchId, whiteGameState);
+        simpMessagingTemplate.convertAndSend("/chess/start" + currentMatchId, whiteGameState);
     }
 
     public void PlayerChat(ChatRequest request) throws InterruptedException, ExecutionException, Exception {
