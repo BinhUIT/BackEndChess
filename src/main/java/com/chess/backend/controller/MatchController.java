@@ -66,9 +66,18 @@ public class MatchController {
         System.out.println("🔥 Principal: " + (principal != null ? principal.getName() : "null"));
         System.out.println("📦 Headers: " + message.getHeaders());
         try {
-            if (request.getMatchType().equals(EMatchType.PRIVATE)) {
+            EMatchType matchType = request.getMatchType();
+            if (matchType == null) {
+                messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match/error",
+                        new MatchResponse("ERROR: Match type is required"));
+                return;
+            }
+
+            if (matchType.equals(EMatchType.PRIVATE)) {
                 // Xử lý tạo match private
                 Match match = matchService.createPrivateMatch(request);
+                System.out.println("Creating match: " + match);
+                System.out.println();
                 if (match != null) {
                     // Gửi thông tin match trực tiếp cho người tạo
                     System.out.println("request playerID = " + request.getPlayerID());
@@ -80,7 +89,7 @@ public class MatchController {
                     messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match/error",
                             new MatchResponse("ERROR: Private match cannot be created"));
                 }
-            } else if (request.getMatchType().equals(EMatchType.RANKED)) {
+            } else if (matchType.equals(EMatchType.RANKED)) {
                 // Xử lý tạo match ranked - thêm người chơi vào hàng đợi
                 Player player = playerService.GetPlayerById(principal.getName());
 

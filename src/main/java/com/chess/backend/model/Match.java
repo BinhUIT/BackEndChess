@@ -19,18 +19,14 @@ import lombok.Setter;
 public class Match {
     @NotNull
     private String matchId;
-    @NotNull
     private Player playerWhite;
-    @NotNull
     private Player playerBlack;
     @NotNull
     private EMatchState matchState;
     @NotNull
     private EMatchType matchType;
-    @NotNull
-    private Integer playTime;
-    @NotNull
-    private int numberOfTurns;
+    private Integer playTime = 0;
+    private int numberOfTurns = 0;
     @NotNull
     private Date matchTime;
 

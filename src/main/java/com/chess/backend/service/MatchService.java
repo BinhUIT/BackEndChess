@@ -92,39 +92,85 @@ public class MatchService {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
         String matchId = generateMatchId();
         String playerPath = "/User/" + request.getPlayerID();
-        // Tao HashMap de luu len FireBase
+        boolean playAsWhite = request.isPlayAsWhite();
+        Integer playTime = request.getPlayTime();
+        EMatchType matchType = request.getMatchType();
+
         Map<String, Object> data = new HashMap<>();
         data.put("matchId", matchId);
         data.put("matchState", EMatchState.WAITING_FOR_PLAYER);
-        data.put("playerWhite", request.isPlayAsWhite() ? playerPath : null);
-        data.put("playerBlack", request.isPlayAsWhite() ? null : playerPath);
+        data.put("playerWhite", playAsWhite ? playerPath : null);
+        data.put("playerBlack", playAsWhite ? null : playerPath);
         data.put("matchType", EMatchType.PRIVATE);
-        data.put("playTime", request.getPlayTime());
+        data.put("playTime", playTime);
         data.put("numberOfTurns", 0);
         data.put("matchTime", new Date());
 
         matchReferenceModel.setMatchId(matchId);
         matchReferenceModel.setMatchState(EMatchState.WAITING_FOR_PLAYER);
-        matchReferenceModel.setMatchType(request.getMatchType());
-        matchReferenceModel.setPlayTime(request.getPlayTime());
+        matchReferenceModel.setMatchType(matchType);
+        matchReferenceModel.setPlayTime(playTime);
         matchReferenceModel.setMatchTime(new Date());
         matchReferenceModel.setNumberOfTurns(0);
 
         Match match = new Match(matchReferenceModel);
-
         Player player = playerRepository.findPlayerById(request.getPlayerID());
-
-        // set lai playerWhite va playerBlack
-        if (request.isPlayAsWhite()) {
-            match.setPlayerWhite(player);
-        } else {
-            match.setPlayerBlack(player);
+        synchronized (match) {
+            if (playAsWhite) {
+                match.setPlayerWhite(player);
+            } else {
+                match.setPlayerBlack(player);
+            }
         }
-
-        firestore.collection("Match").document(matchId).set(data);
+        try {
+            firestore.collection("Match").document(matchId).set(data);
+        } catch (Exception e) {
+            System.err.println("    ❌ Firestore save failed: " + e.getMessage());
+        }
 
         return match;
     }
+    // public Match createPrivateMatch(CreateMatchRequest request) {
+    // MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
+    // String matchId = UUID.randomUUID().toString();
+    // String playerPath = "/User/" + request.getPlayerID();
+    // boolean playAsWhite = request.isPlayAsWhite();
+    // Integer playTime = request.getPlayTime();
+    // EMatchType matchType = request.getMatchType();
+
+    // // Tao HashMap de luu len FireBase
+    // Map<String, Object> data = new HashMap<>();
+    // data.put("matchId", matchId);
+    // data.put("matchState", EMatchState.WAITING_FOR_PLAYER);
+    // data.put("playerWhite", playAsWhite ? playerPath : null);
+    // data.put("playerBlack", playAsWhite ? null : playerPath);
+    // data.put("matchType", EMatchType.PRIVATE);
+    // data.put("playTime", playTime);
+    // data.put("numberOfTurns", 0);
+    // data.put("matchTime", new Date());
+
+    // matchReferenceModel.setMatchId(matchId);
+    // matchReferenceModel.setMatchState(EMatchState.WAITING_FOR_PLAYER);
+    // matchReferenceModel.setMatchType(matchType);
+    // matchReferenceModel.setPlayTime(playTime);
+    // matchReferenceModel.setMatchTime(new Date());
+    // matchReferenceModel.setNumberOfTurns(0);
+
+    // Match match = new Match(matchReferenceModel);
+
+    // Player player = playerRepository.findPlayerById(request.getPlayerID());
+
+    // // set lai playerWhite va playerBlack
+    // if (request.isPlayAsWhite()) {
+    // match.setPlayerWhite(player);
+    // } else {
+    // match.setPlayerBlack(player);
+    // }
+
+    // firestore.collection("Match").document(matchId).set(data);
+
+    // return match;
+    // }
 
     public Match createRankedMatch(CreateMatchRequest request, Player opponent) {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
