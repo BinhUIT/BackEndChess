@@ -272,8 +272,8 @@ public class MatchService {
             matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
             Match match = new Match(matchReferenceModel);
-            String playerWhiteId = extractPlayerIdFromPath(playerWhitePath);
-            String playerBlackId = extractPlayerIdFromPath(playerBlackPath);
+            String playerWhiteId = (playerWhitePath==null)? playerId: extractPlayerIdFromPath(playerWhitePath);
+            String playerBlackId = (playerBlackPath==null)? playerId: extractPlayerIdFromPath(playerBlackPath);
 
             // Thêm các người chơi vào match
             match.setPlayerWhite(fetchPlayer(playerWhiteId));

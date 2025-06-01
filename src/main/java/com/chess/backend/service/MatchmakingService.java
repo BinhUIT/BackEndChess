@@ -75,6 +75,7 @@ public class MatchmakingService {
     }
 
     public Match findMatch(Player player) {
+        System.out.println("------------------goi ham tim tran rank 1-----------------");
         if (player == null) {
             return null;
         }
@@ -89,6 +90,7 @@ public class MatchmakingService {
                 }
             }
         }
+        System.out.println("------------------goi ham tim tran rank 2-----------------");
 
         // Nếu không tìm thấy người chơi trong hàng đợi
         if (currentQueuedPlayer == null) {
@@ -103,6 +105,7 @@ public class MatchmakingService {
 
         // Tìm đối thủ phù hợp trong hàng đợi
         synchronized (playerQueue) {
+            System.out.println("------------------goi ham tim tran rank 3-----------------");
             for (QueuedRankPlayer queuedOpponent : playerQueue) {
                 Player opponent = queuedOpponent.getPlayer();
 
@@ -114,15 +117,13 @@ public class MatchmakingService {
                 // Kiểm tra timePlay có khớp chính xác không
                 boolean timePlayMatches = Objects.equals(requestedPlayTime, queuedOpponent.getPlayTime());
 
-                // Kiểm tra matchType có khớp không
-                boolean matchTypeMatches = matchType == queuedOpponent.getMatchType();
-
                 // Kiểm tra rank có phù hợp không
                 boolean rankMatches = Math.abs(opponent.getRank() - playerRank) <= rankThreshold;
 
                 // Chỉ ghép cặp khi tất cả các điều kiện đều thỏa mãn
-                if (timePlayMatches && matchTypeMatches && rankMatches) {
+                if (timePlayMatches && rankMatches) {
                     try {
+                        System.out.println("-----------Thoi gian cua tran dau: " + timePlayMatches);
                         // Tạo trận đấu xếp hạng
                         CreateMatchRequest request = new CreateMatchRequest();
                         request.setMatchType(EMatchType.RANKED);
