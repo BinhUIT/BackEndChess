@@ -168,7 +168,13 @@ public class MatchController {
     @MessageMapping("/chess/start")
     public void StartMatch(@Payload String currentMatchId) {
         try {
-            matchService.StartGame(currentMatchId);
+            Match match = matchService.getMatchById(currentMatchId);
+
+            if (match != null) {
+                matchService.StartGame(new MatchResponse(match));
+            } else {
+                matchService.StartGame(new MatchResponse("Match not found"));
+            }
             return;
         } catch (Exception e) {
             e.printStackTrace();

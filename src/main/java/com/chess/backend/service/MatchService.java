@@ -319,8 +319,8 @@ public class MatchService {
             matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
             Match match = new Match(matchReferenceModel);
-            String playerWhiteId = (playerWhitePath == null) ? playerId : extractPlayerIdFromPath(playerWhitePath);
-            String playerBlackId = (playerBlackPath == null) ? playerId : extractPlayerIdFromPath(playerBlackPath);
+            String playerWhiteId = extractPlayerIdFromPath(playerWhitePath);
+            String playerBlackId = extractPlayerIdFromPath(playerBlackPath);
 
             // Thêm các người chơi vào match
             match.setPlayerWhite(fetchPlayer(playerWhiteId));
@@ -421,6 +421,11 @@ public class MatchService {
         match.setNumberOfTurns(match.getNumberOfTurns() + 1);
         fireBaseMatchRepository.saveMatch(match);
         simpMessagingTemplate.convertAndSend("/chess/move/" + request.getCurrentMatchId(), request.getGameState());
+
+    }
+
+    public void StartGame(MatchResponse matchResponse) throws InterruptedException, ExecutionException, Exception {
+        simpMessagingTemplate.convertAndSend("/chess/start" + matchResponse.getMatchId(), matchResponse);
     }
 
     public void StartGame(String currentMatchId) throws InterruptedException, ExecutionException, Exception {
@@ -447,7 +452,7 @@ public class MatchService {
         Board board = new Board();
         GameState whiteGameState = new GameState(EPlayer.WHITE, board);
 
-        simpMessagingTemplate.convertAndSend("/chess/start" + currentMatchId, whiteGameState);
+        simpMessagingTemplate.convertAndSend("/topic/match/" + currentMatchId, whiteGameState);
     }
 
     public void PlayerChat(ChatRequest request) throws InterruptedException, ExecutionException, Exception {
