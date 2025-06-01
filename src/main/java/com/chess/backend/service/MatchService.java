@@ -177,15 +177,16 @@ public class MatchService {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
         String matchId = generateMatchId();
         String playerPath = "/User/" + request.getPlayerID();
+        String opponentPath = "/User/" + opponent.getPlayerId();
         // random 0 hoặc 1
         int randomInt = (int) (Math.random() * 2);
         // Tao HashMap de luu len FireBase
         Map<String, Object> data = new HashMap<>();
         data.put("matchId", matchId);
         data.put("matchState", EMatchState.IN_PROGRESS);
-        data.put("playerWhite", randomInt == 0 ? playerPath : null);
-        data.put("playerBlack", randomInt == 0 ? null : playerPath);
-        data.put("matchType", EMatchType.PRIVATE);
+        data.put("playerWhite", randomInt == 0 ? playerPath : opponentPath);
+        data.put("playerBlack", randomInt == 0 ? opponentPath : playerPath);
+        data.put("matchType", EMatchType.RANKED);
         data.put("playTime", request.getPlayTime());
         data.put("numberOfTurns", 0);
         data.put("matchTime", new Date());
@@ -202,9 +203,11 @@ public class MatchService {
         Player player = playerRepository.findPlayerById(request.getPlayerID());
 
         // set lai playerWhite va playerBlack
-        if (request.isPlayAsWhite()) {
+        if (randomInt==0) {
             match.setPlayerWhite(player);
+            match.setPlayerBlack(opponent);
         } else {
+            match.setPlayerWhite(opponent);
             match.setPlayerBlack(player);
         }
 

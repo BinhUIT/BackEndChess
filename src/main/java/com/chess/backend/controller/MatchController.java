@@ -91,6 +91,7 @@ public class MatchController {
                 }
             } else if (matchType.equals(EMatchType.RANKED)) {
                 // Xử lý tạo match ranked - thêm người chơi vào hàng đợi
+                messagingTemplate.convertAndSendToUser(principal.getName(), "/queue/match","Added to matchmaking queue");
                 Player player = playerService.GetPlayerById(principal.getName());
 
                 // Thêm người chơi vào hàng đợi tìm trận
@@ -105,6 +106,16 @@ public class MatchController {
                     Match match = matchmakingService.findMatch(player);
 
                     if (match != null) {
+                                                System.out.println("👉 Creating match between:");
+                        System.out.println("White: "
+                                + (match.getPlayerWhite() != null ? match.getPlayerWhite().getPlayerId() : "null"));
+                        System.out.println("Black: "
+                                + (match.getPlayerBlack() != null ? match.getPlayerBlack().getPlayerId() : "null"));
+                        System.out.println("Principal: " + principal.getName());
+                        System.out.println(
+                                "Destination white: /user/" + match.getPlayerWhite().getPlayerId() + "/queue/match");
+                        System.out.println(
+                                "Destination black: /user/" + match.getPlayerBlack().getPlayerId() + "/queue/match");
                         // Gửi thông tin match cho cả hai người chơi
                         messagingTemplate.convertAndSendToUser(match.getPlayerBlack().getPlayerId(),
                                 "/queue/match", new MatchResponse(match));
