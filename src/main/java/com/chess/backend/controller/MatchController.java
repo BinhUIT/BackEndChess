@@ -76,7 +76,7 @@ public class MatchController {
             if (matchType.equals(EMatchType.PRIVATE)) {
                 // Xử lý tạo match private
                 System.out.print("Creating match: ");
-                Match match = matchService.createPrivateMatch(request, true);
+                Match match = matchService.createPrivateMatch(request);
                 System.out.print(match + "\n");
                 System.out.println();
                 if (match != null) {
@@ -143,7 +143,6 @@ public class MatchController {
     public void joinMatch(@DestinationVariable String matchId, JoinMatchRequest request) {
         try {
             Match updateMatch = matchService.joinMatch(matchId, request.getPlayerId());
-
             messagingTemplate.convertAndSend("/topic/match/" + matchId, new MatchResponse(updateMatch));
         } catch (Exception ex) {
             messagingTemplate.convertAndSend("/topic/match/" + matchId + "/error", ex.getMessage());
@@ -168,8 +167,8 @@ public class MatchController {
     @MessageMapping("/chess/start")
     public void StartMatch(@Payload String currentMatchId) {
         try {
-            Match match = matchService.getMatchById(currentMatchId);
-
+            Match match = matchService.getMatchByIdAsync(currentMatchId).get();
+            System.out.println("Starting match with ID: " + currentMatchId);
             if (match != null) {
                 matchService.StartGame(new MatchResponse(match));
             } else {

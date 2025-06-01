@@ -319,8 +319,8 @@ public class MatchService {
             matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
             Match match = new Match(matchReferenceModel);
-            String playerWhiteId = extractPlayerIdFromPath(playerWhitePath);
-            String playerBlackId = extractPlayerIdFromPath(playerBlackPath);
+            String playerWhiteId = (playerWhitePath == null) ? playerId : extractPlayerIdFromPath(playerWhitePath);
+            String playerBlackId = (playerBlackPath == null) ? playerId : extractPlayerIdFromPath(playerBlackPath);
 
             // Thêm các người chơi vào match
             match.setPlayerWhite(fetchPlayer(playerWhiteId));
@@ -403,6 +403,16 @@ public class MatchService {
         return match;
     }
 
+    public CompletableFuture<Match> getMatchByIdAsync(String matchId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return this.fireBaseMatchRepository.getMatchById(matchId);
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Failed to fetch match: " + e.getMessage(), e);
+            }
+        });
+    }
+
     public void PlayerMove(MoveRequest request) throws InterruptedException, ExecutionException, Exception {
         DocumentSnapshot document;
         try {
@@ -420,12 +430,15 @@ public class MatchService {
         }
         match.setNumberOfTurns(match.getNumberOfTurns() + 1);
         fireBaseMatchRepository.saveMatch(match);
-        simpMessagingTemplate.convertAndSend("/chess/move/" + request.getCurrentMatchId(), request.getGameState());
+        simpMessagingTemplate.convertAndSend("/topic/chess/move/" + request.getCurrentMatchId(),
+                request.getGameState());
 
     }
 
     public void StartGame(MatchResponse matchResponse) throws InterruptedException, ExecutionException, Exception {
-        simpMessagingTemplate.convertAndSend("/chess/start" + matchResponse.getMatchId(), matchResponse);
+        String chessStartTopic = "/topic/chess/start/" + matchResponse.getMatchId();
+        System.out.println("Sending start game message to topic: " + chessStartTopic);
+        simpMessagingTemplate.convertAndSend(chessStartTopic, matchResponse);
     }
 
     public void StartGame(String currentMatchId) throws InterruptedException, ExecutionException, Exception {
@@ -438,8 +451,8 @@ public class MatchService {
         }
         if (!document.exists()) {
             throw new Exception("Match not found");
-
         }
+
         String playerWhitePath = document.get("playerWhite", String.class);
         String playerBlackPath = document.get("playerBlack", String.class);
 

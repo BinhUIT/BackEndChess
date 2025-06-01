@@ -72,7 +72,7 @@ public class FireBasePlayerRepository implements PlayerRepository {
     @Override
     public Player findPlayerById(String playerId) {
         try {
-            DocumentReference docRef = dbFirestore.collection("User").document(playerId);
+            DocumentReference docRef = dbFirestore.collection(COLLECTION_NAME).document(playerId);
             ApiFuture<DocumentSnapshot> future = docRef.get();
             DocumentSnapshot document = future.get();
 
