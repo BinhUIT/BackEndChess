@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,12 +90,89 @@ public class MatchService {
         }
     }
 
+    public Match createPrivateMatch(CreateMatchRequest request, boolean debug) {
+        if (!debug)
+            return createPrivateMatch(request);
+
+        System.out.println("Starting createPrivateMatch...");
+
+        MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
+        System.out.println("Created new MatchReferenceModel");
+
+        String matchId = generateMatchId();
+        System.out.println("Generated match ID: " + matchId);
+
+        String playerId = request.getPlayerID();
+        System.out.println("Get player ID: " + playerId);
+
+        String playerPath = "/User/" + request.getPlayerID();
+        System.out.println("Created player path: " + playerPath);
+
+        boolean playAsWhite = request.isPlayAsWhite();
+        System.out.println("Player wants to play as white: " + playAsWhite);
+
+        Integer playTime = request.getPlayTime() != null ? request.getPlayTime() : 0;
+        System.out.println("Play time set to: " + playTime);
+
+        EMatchType matchType = request.getMatchType();
+        System.out.println("Match type: " + matchType);
+
+        Map<String, Object> data = new HashMap<>();
+        System.out.println("Creating data map for Firestore...");
+
+        data.put("matchId", matchId);
+        data.put("matchState", EMatchState.WAITING_FOR_PLAYER);
+        data.put("playerWhite", playAsWhite ? playerPath : null);
+        data.put("playerBlack", playAsWhite ? null : playerPath);
+        data.put("matchType", EMatchType.PRIVATE);
+        data.put("playTime", playTime);
+        data.put("numberOfTurns", 0);
+        data.put("matchTime", new Date());
+        System.out.println("Data map populated: " + data);
+
+        matchReferenceModel.setMatchId(matchId);
+        matchReferenceModel.setMatchState(EMatchState.WAITING_FOR_PLAYER);
+        matchReferenceModel.setMatchType(matchType);
+        matchReferenceModel.setPlayTime(playTime);
+        matchReferenceModel.setMatchTime(new Date());
+        matchReferenceModel.setNumberOfTurns(0);
+        System.out.println("MatchReferenceModel populated");
+
+        Match match = new Match(matchReferenceModel);
+        System.out.println("Created new Match object");
+
+        try {
+            Player player = fetchPlayer(playerId);
+            if (playAsWhite) {
+                match.setPlayerWhite(player);
+                System.out.println("Assigned player as white");
+            } else {
+                match.setPlayerBlack(player);
+                System.out.println("Assigned player as black");
+            }
+        } catch (RuntimeException e) {
+            System.err.println("Failed to fetch player: " + e.getMessage());
+        }
+
+        try {
+            System.out.println("Attempting to save to Firestore...");
+            firestore.collection("Match").document(matchId).set(data);
+            System.out.println("✅ Successfully saved to Firestore");
+        } catch (Exception e) {
+            System.err.println("    ❌ Firestore save failed: " + e.getMessage());
+        }
+
+        System.out.println("Returning match object");
+        return match;
+    }
+
     public Match createPrivateMatch(CreateMatchRequest request) {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
         String matchId = generateMatchId();
-        String playerPath = "/User/" + request.getPlayerID();
+        String playerId = request.getPlayerID();
+        String playerPath = "/User/" + playerId;
         boolean playAsWhite = request.isPlayAsWhite();
-        Integer playTime = request.getPlayTime();
+        Integer playTime = request.getPlayTime() != null ? request.getPlayTime() : 0;
         EMatchType matchType = request.getMatchType();
 
         Map<String, Object> data = new HashMap<>();
@@ -115,14 +193,19 @@ public class MatchService {
         matchReferenceModel.setNumberOfTurns(0);
 
         Match match = new Match(matchReferenceModel);
-        Player player = playerRepository.findPlayerById(request.getPlayerID());
-        synchronized (match) {
+        try {
+            Player player = fetchPlayer(playerId); // Waits until the Future completes
             if (playAsWhite) {
                 match.setPlayerWhite(player);
+                System.out.println("Assigned player as white");
             } else {
                 match.setPlayerBlack(player);
+                System.out.println("Assigned player as black");
             }
+        } catch (RuntimeException e) {
+            System.err.println("Failed to fetch player: " + e.getMessage());
         }
+
         try {
             firestore.collection("Match").document(matchId).set(data);
         } catch (Exception e) {
@@ -131,53 +214,14 @@ public class MatchService {
 
         return match;
     }
-    // public Match createPrivateMatch(CreateMatchRequest request) {
-    // MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
-    // String matchId = UUID.randomUUID().toString();
-    // String playerPath = "/User/" + request.getPlayerID();
-    // boolean playAsWhite = request.isPlayAsWhite();
-    // Integer playTime = request.getPlayTime();
-    // EMatchType matchType = request.getMatchType();
-
-    // // Tao HashMap de luu len FireBase
-    // Map<String, Object> data = new HashMap<>();
-    // data.put("matchId", matchId);
-    // data.put("matchState", EMatchState.WAITING_FOR_PLAYER);
-    // data.put("playerWhite", playAsWhite ? playerPath : null);
-    // data.put("playerBlack", playAsWhite ? null : playerPath);
-    // data.put("matchType", EMatchType.PRIVATE);
-    // data.put("playTime", playTime);
-    // data.put("numberOfTurns", 0);
-    // data.put("matchTime", new Date());
-
-    // matchReferenceModel.setMatchId(matchId);
-    // matchReferenceModel.setMatchState(EMatchState.WAITING_FOR_PLAYER);
-    // matchReferenceModel.setMatchType(matchType);
-    // matchReferenceModel.setPlayTime(playTime);
-    // matchReferenceModel.setMatchTime(new Date());
-    // matchReferenceModel.setNumberOfTurns(0);
-
-    // Match match = new Match(matchReferenceModel);
-
-    // Player player = playerRepository.findPlayerById(request.getPlayerID());
-
-    // // set lai playerWhite va playerBlack
-    // if (request.isPlayAsWhite()) {
-    // match.setPlayerWhite(player);
-    // } else {
-    // match.setPlayerBlack(player);
-    // }
-
-    // firestore.collection("Match").document(matchId).set(data);
-
-    // return match;
-    // }
 
     public Match createRankedMatch(CreateMatchRequest request, Player opponent) {
         MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
         String matchId = generateMatchId();
-        String playerPath = "/User/" + request.getPlayerID();
-        String opponentPath = "/User/" + opponent.getPlayerId();
+        String playerId = request.getPlayerID();
+        String opponentId = opponent.getPlayerId();
+        String playerPath = "/User/" + playerId;
+        String opponentPath = "/User/" + opponentId;
         // random 0 hoặc 1
         int randomInt = (int) (Math.random() * 2);
         // Tao HashMap de luu len FireBase
@@ -200,15 +244,18 @@ public class MatchService {
 
         Match match = new Match(matchReferenceModel);
 
-        Player player = playerRepository.findPlayerById(request.getPlayerID());
-
-        // set lai playerWhite va playerBlack
-        if (randomInt==0) {
-            match.setPlayerWhite(player);
-            match.setPlayerBlack(opponent);
-        } else {
-            match.setPlayerWhite(opponent);
-            match.setPlayerBlack(player);
+        try {
+            Player player = fetchPlayer(playerId); // Waits until the Future completes
+            // set lai playerWhite va playerBlack
+            if (randomInt == 0) {
+                match.setPlayerWhite(player);
+                match.setPlayerBlack(opponent);
+            } else {
+                match.setPlayerWhite(opponent);
+                match.setPlayerBlack(player);
+            }
+        } catch (RuntimeException e) {
+            System.err.println("Failed to fetch player: " + e.getMessage());
         }
 
         firestore.collection("Match").document(matchId).set(data);
@@ -289,10 +336,19 @@ public class MatchService {
     }
 
     private Player fetchPlayer(String playerId) {
-        Player player = playerRepository.findPlayerById(playerId);
-        if (player == null)
-            throw new RuntimeException("Player not found: " + playerId);
-        return player;
+        try {
+            CompletableFuture<Player> playerFuture = playerRepository.findPlayerByIdAsync(playerId);
+            Player player = playerFuture.get(); // Waits until the Future completes
+            if (player == null) {
+                System.err.println("❌ Player not found with ID: " + playerId);
+                throw new RuntimeException("Player not found");
+            }
+            System.out.println("Found player: " + player);
+            return player;
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Failed to fetch player: " + e.getMessage());
+        }
+        return null; // Trả về null nếu không tìm thấy người chơi
     }
 
     private String extractPlayerIdFromPath(String path) {
@@ -329,12 +385,19 @@ public class MatchService {
         String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
         String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
 
-        if (playerWhiteId != null) {
-            match.setPlayerWhite(playerRepository.findPlayerById(playerWhiteId));
-        }
+        try {
+            if (playerWhiteId != null) {
+                Player whitePlayer = fetchPlayer(playerWhiteId);
+                match.setPlayerWhite(whitePlayer);
+            }
 
-        if (playerBlackId != null) {
-            match.setPlayerBlack(playerRepository.findPlayerById(playerBlackId));
+            if (playerBlackId != null) {
+                Player blackPlayer = fetchPlayer(playerBlackId);
+                match.setPlayerBlack(blackPlayer);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to fetch players: " + e.getMessage());
+            return null; // Trả về null nếu không tìm thấy người chơi
         }
 
         return match;

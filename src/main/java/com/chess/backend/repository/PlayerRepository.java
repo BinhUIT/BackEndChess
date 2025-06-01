@@ -1,10 +1,11 @@
 package com.chess.backend.repository;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import com.chess.backend.model.Player;
 
-public interface PlayerRepository{
+public interface PlayerRepository {
     // Save a player to Firebase
     Player savePlayer(Player player);
 
@@ -17,4 +18,6 @@ public interface PlayerRepository{
     List<Player> getAllPlayers();
 
     Player findPlayerById(String playerId);
+
+    CompletableFuture<Player> findPlayerByIdAsync(String playerId);
 }

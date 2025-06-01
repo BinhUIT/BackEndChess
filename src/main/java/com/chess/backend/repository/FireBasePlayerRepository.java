@@ -6,6 +6,7 @@ import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -84,12 +85,22 @@ public class FireBasePlayerRepository implements PlayerRepository {
                 int score = document.getLong("score") != null ? document.getLong("score").intValue() : 0;
 
                 return new Player(playerId, email, playerName, matches, rank, win, score);
-            }
-            else{
+            } else {
                 return null;
             }
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Error finding player: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public CompletableFuture<Player> findPlayerByIdAsync(String playerId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return findPlayerById(playerId);
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Error finding player asynchronously: " + e.getMessage(), e);
+            }
+        });
     }
 }

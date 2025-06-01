@@ -10,10 +10,9 @@ import lombok.NoArgsConstructor;
 public class CreateMatchRequest {
     @NotNull
     private String playerID;
-
-    private boolean playAsWhite; // nguoi tao muon chon quan trang hay khong
-    @NotNull
-    private Integer playTime;
     @NotNull
     private EMatchType matchType;
+
+    private boolean playAsWhite; // nguoi tao muon chon quan trang hay khong
+    private Integer playTime;
 }

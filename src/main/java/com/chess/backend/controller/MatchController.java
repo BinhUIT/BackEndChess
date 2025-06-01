@@ -75,8 +75,9 @@ public class MatchController {
 
             if (matchType.equals(EMatchType.PRIVATE)) {
                 // Xử lý tạo match private
-                Match match = matchService.createPrivateMatch(request);
-                System.out.println("Creating match: " + match);
+                System.out.print("Creating match: ");
+                Match match = matchService.createPrivateMatch(request, true);
+                System.out.print(match + "\n");
                 System.out.println();
                 if (match != null) {
                     // Gửi thông tin match trực tiếp cho người tạo
@@ -98,26 +99,28 @@ public class MatchController {
                 // Thêm người chơi vào hàng đợi tìm trận
                 boolean addedToQueue = matchmakingService.addPlayerToQueue(player, request);
 
-                
                 if (addedToQueue) {
                     // Thông báo cho người chơi rằng họ đã được thêm vào hàng đợi
-                    messagingTemplate.convertAndSend("/topic/rank-match/" + player.getPlayerId() ,"Added to matchmaking queue");
+                    messagingTemplate.convertAndSend("/topic/rank-match/" + player.getPlayerId(),
+                            "Added to matchmaking queue");
 
                     // Tìm người chơi phù hợp và tạo match nếu có
                     Match match = matchmakingService.findMatch(player);
 
                     if (match != null) {
                         System.out.println("👉 Creating match between:");
+                        System.out.println("👉 Creating match between:");
                         System.out.println("White: "
                                 + (match.getPlayerWhite() != null ? match.getPlayerWhite().getPlayerId() : "null"));
                         System.out.println("Black: "
                                 + (match.getPlayerBlack() != null ? match.getPlayerBlack().getPlayerId() : "null"));
                         System.out.println("Principal: " + principal.getName());
-                
+
                         // Gửi thông tin match cho cả hai người chơi
-                        messagingTemplate.convertAndSend("/topic/rank-match/" + match.getPlayerBlack().getPlayerId(), new MatchResponse(match));
-                        messagingTemplate.convertAndSend("/topic/rank-match/" + match.getPlayerWhite().getPlayerId(), new MatchResponse(match));
-                        
+                        messagingTemplate.convertAndSend("/topic/rank-match/" + match.getPlayerBlack().getPlayerId(),
+                                new MatchResponse(match));
+                        messagingTemplate.convertAndSend("/topic/rank-match/" + match.getPlayerWhite().getPlayerId(),
+                                new MatchResponse(match));
 
                         // Xóa cả hai người chơi khỏi hàng đợi
                         matchmakingService.removePlayersFromQueue(match.getPlayerBlack(), match.getPlayerWhite());
@@ -218,8 +221,9 @@ public class MatchController {
                     exception.toString() + "\n" + Arrays.toString(exception.getStackTrace()));
         }
     }
+
     @MessageMapping("/chess/destroyMatch/{matchId}")
-    public void destroyMatch(@DestinationVariable String matchId){
+    public void destroyMatch(@DestinationVariable String matchId) {
         messagingTemplate.convertAndSend("/topic/match/" + matchId, "destroyed");
     }
 }
