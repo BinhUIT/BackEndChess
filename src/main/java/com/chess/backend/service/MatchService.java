@@ -27,6 +27,7 @@ import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.MoveRequest;
 import com.chess.backend.response.MatchResponse;
+import com.google.api.client.util.Strings;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -224,71 +225,71 @@ public class MatchService {
         return sb.toString();
     }
 
-
     public Match joinMatch(String matchId, String playerId) throws InterruptedException, ExecutionException {
-        DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
+        return firestore.runTransaction(transaction -> {
+            DocumentSnapshot document = getDataService.GetDataSnapShot("Match", matchId);
+            if (!document.exists()) {
+                throw new RuntimeException("Match not found");
+            }
 
-        if (!document.exists()) {
-            throw new RuntimeException("Match not found");
-        }
+            EMatchState currentState = EMatchState.valueOf(document.getString("matchState"));
+            if (currentState != EMatchState.WAITING_FOR_PLAYER)
+                throw new RuntimeException("Match not joinable. State: " + currentState);
 
-        String matchStateStr = document.getString("matchState");
-        EMatchState currentState = EMatchState.valueOf(matchStateStr);
+            // Xác định vị trí người chơi (trắng hoặc đen)
+            String playerWhitePath = document.getString("playerWhite");
+            String playerBlackPath = document.getString("playerBlack");
+            Map<String, Object> updates = new HashMap<>();
+            String playerPath = "/User/" + playerId;
 
-        if (currentState != EMatchState.WAITING_FOR_PLAYER) {
-            throw new RuntimeException("Cannot join this match");
-        }
+            if (Strings.isNullOrEmpty(playerWhitePath)) {
+                updates.put("playerWhite", playerPath);
+            } else if (Strings.isNullOrEmpty(playerBlackPath)) {
+                updates.put("playerBlack", playerPath);
+            } else {
+                throw new RuntimeException("Match is full");
+            }
 
-        // Xác định vị trí người chơi (trắng hoặc đen)
-        String playerWhitePath = document.getString("playerWhite");
-        String playerBlackPath = document.getString("playerBlack");
+            // Cập nhật trạng thái match
+            boolean isNowFull = !Strings.isNullOrEmpty(playerWhitePath) && !Strings.isNullOrEmpty(playerBlackPath);
+            EMatchState newState = isNowFull
+                    ? EMatchState.IN_PROGRESS
+                    : EMatchState.WAITING_FOR_PLAYER;
+            updates.put("matchState", newState.toString());
 
-        Map<String, Object> updates = new HashMap<>();
+            // Cập nhật dữ liệu trong Firebase
+            firestore.collection("Match").document(matchId).update(updates);
 
-        String playerPath = "/User/" + playerId;
+            // Tạo và trả về đối tượng Match
+            MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
+            matchReferenceModel.setMatchId(matchId);
+            matchReferenceModel.setMatchState(newState);
+            matchReferenceModel.setNumberOfTurns(document.getLong("numberOfTurns").intValue());
+            matchReferenceModel.setMatchTime(document.getDate("matchTime"));
+            matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
 
-        if (playerWhitePath == null) {
-            updates.put("playerWhite", playerPath);
-            playerWhitePath = playerPath;
-        } else if (playerBlackPath == null) {
-            updates.put("playerBlack", playerPath);
-            playerBlackPath = playerPath;
-        } else {
-            throw new RuntimeException("Match is full");
-        }
+            Match match = new Match(matchReferenceModel);
+            String playerWhiteId = extractPlayerIdFromPath(playerWhitePath);
+            String playerBlackId = extractPlayerIdFromPath(playerBlackPath);
 
-        // Cập nhật trạng thái match
-        EMatchState newState = (playerWhitePath != null && playerBlackPath != null)
-                ? EMatchState.IN_PROGRESS
-                : EMatchState.WAITING_FOR_PLAYER;
+            // Thêm các người chơi vào match
+            match.setPlayerWhite(fetchPlayer(playerWhiteId));
+            match.setPlayerBlack(fetchPlayer(playerBlackId));
 
-        updates.put("matchState", newState.toString());
+            // Kiểm tra xem có người chơi nào không
+            if (match.getPlayerWhite() == null || match.getPlayerBlack() == null) {
+                throw new RuntimeException("Player not found");
+            }
 
-        // Cập nhật dữ liệu trong Firebase
-        firestore.collection("Match").document(matchId).update(updates);
+            return match;
+        }).get();
+    }
 
-        // Tạo và trả về đối tượng Match
-        MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
-        matchReferenceModel.setMatchId(matchId);
-        matchReferenceModel.setMatchState(newState);
-        matchReferenceModel.setNumberOfTurns(document.getLong("numberOfTurns").intValue());
-        matchReferenceModel.setMatchTime(document.getDate("matchTime"));
-        matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
-
-        Match match = new Match(matchReferenceModel);
-
-        String playerWhiteId = playerWhitePath != null ? extractPlayerIdFromPath(playerWhitePath) : null;
-        String playerBlackId = playerBlackPath != null ? extractPlayerIdFromPath(playerBlackPath) : null;
-
-        // Thêm các người chơi vào match
-        if (playerWhiteId != null) {
-            match.setPlayerWhite(playerRepository.findPlayerById(playerWhiteId));
-        }
-        if (playerBlackId != null) {
-            match.setPlayerBlack(playerRepository.findPlayerById(playerBlackId));
-        }
-
-        return match;
+    private Player fetchPlayer(String playerId) {
+        Player player = playerRepository.findPlayerById(playerId);
+        if (player == null)
+            throw new RuntimeException("Player not found: " + playerId);
+        return player;
     }
 
     private String extractPlayerIdFromPath(String path) {

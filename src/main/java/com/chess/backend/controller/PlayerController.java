@@ -44,7 +44,8 @@ public class PlayerController {
     private FirebaseAuthService firebaseAuthService;
     @Autowired
     private MatchService matchService;
-    @GetMapping("/player/{id}") 
+
+    @GetMapping("/player/{id}")
     public ResponseEntity<Player> getPlayerById(@PathVariable("id") String id) {
         Player res;
         try {
@@ -69,10 +70,10 @@ public class PlayerController {
     @PostMapping("/player/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            //Xác thực UID với Firebase Admin SDK
+            // Xác thực UID với Firebase Admin SDK
             UserRecord user = FirebaseAuth.getInstance().getUser(request.getUid());
             String customToken = FirebaseAuth.getInstance()
-                .createCustomToken(request.getUid());
+                    .createCustomToken(request.getUid());
 
             Map<String, String> response = new HashMap<>();
             response.put("token", customToken);
@@ -84,65 +85,67 @@ public class PlayerController {
         } catch (FirebaseAuthException e) {
             return ResponseEntity.status(401).body("Invalid UID");
         }
-    } 
+    }
+
     @GetMapping("/allPlayer")
     public ResponseEntity<List<Player>> GetAllPlayer() {
         try {
             List<Player> listPlayer = playerService.GetAllPlayer();
             return new ResponseEntity<>(listPlayer, HttpStatus.OK);
-        }
-        catch(InterruptedException|ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PostMapping("/register") 
+    @PostMapping("/register")
     public ResponseEntity<Player> Register(@RequestBody PlayerRegisterRequest request) {
+        System.out.println("Registering player...");
         Player res;
         try {
-            res=playerService.RegisterPlayer(request);
-            return new ResponseEntity<>(res,HttpStatus.OK);
-        }
-        catch(Exception e) {
+            res = playerService.RegisterPlayer(request);
+            if (res == null) {
+                return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            }
+            System.out.println("Player registered: " + res.getId());
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    } 
+    }
 
-    @GetMapping("/getMatches") 
+    @GetMapping("/getMatches")
     public ResponseEntity<List<Match>> GetMatch(@RequestHeader("Authorization") String tokenString) {
         String token = tokenString.substring(7);
         try {
-            String userUID= firebaseAuthService.getUidFromToken(token);
+            String userUID = firebaseAuthService.getUidFromToken(token);
             List<Match> res = matchService.GetMatchesOfPlayer(userUID);
             return new ResponseEntity<>(res, HttpStatus.OK);
-        }
-        catch(FirebaseAuthException e){ 
+        } catch (FirebaseAuthException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        }
-        catch(InterruptedException|ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PutMapping("/player/update") 
-    public ResponseEntity<Player> UpdatePlayer(@RequestHeader("Authorization") String tokenString, @RequestBody PlayerUpdateRequest request) {
-        String token= tokenString.substring(7);
+
+    @PutMapping("/player/update")
+    public ResponseEntity<Player> UpdatePlayer(@RequestHeader("Authorization") String tokenString,
+            @RequestBody PlayerUpdateRequest request) {
+        String token = tokenString.substring(7);
         try {
-            String userUID= firebaseAuthService.getUidFromToken(token);
-            Player p=playerService.UpdatePlayer(request, userUID);
-            if(p==null) {
+            String userUID = firebaseAuthService.getUidFromToken(token);
+            Player p = playerService.UpdatePlayer(request, userUID);
+            if (p == null) {
                 return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-            } 
-            return new ResponseEntity<>(p,HttpStatus.OK);
-        } 
-        catch(FirebaseAuthException e) {
+            }
+            return new ResponseEntity<>(p, HttpStatus.OK);
+        } catch (FirebaseAuthException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.UNAUTHORIZED);
-        }
-        catch(InterruptedException|ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
