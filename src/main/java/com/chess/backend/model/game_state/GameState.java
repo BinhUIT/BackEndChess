@@ -10,8 +10,11 @@ import java.util.Map;
 import com.chess.backend.model.move.Move;
 import com.chess.backend.model.pieces.Piece;
 
+import lombok.ToString;
+
+@ToString
 public class GameState implements Serializable {
-    private final Board board;
+    private Board board;
     private EPlayer currentPlayer;
     private Result result = null;
     private int noCaptureOrPawnMoves = 0;
@@ -19,6 +22,11 @@ public class GameState implements Serializable {
     private final Map<String, Integer> stateHistory = new HashMap<>();
     private Duration whiteTimer;
     private Duration blackTimer;
+
+    public GameState() {
+        // constructor mặc định (rỗng) để Jackson có thể khởi tạo object
+    }
+
     public GameState(EPlayer player, Board board) {
         this(player, board, Duration.ofMinutes(10));
     }
@@ -133,14 +141,14 @@ public class GameState implements Serializable {
         if (!stateHistory.containsKey(stateString)) {
             stateHistory.put(stateString, 1);
         } else {
-            Integer numberFold =  stateHistory.getOrDefault(stateString, 0);
+            Integer numberFold = stateHistory.getOrDefault(stateString, 0);
             numberFold = numberFold != null ? numberFold : 0;
             stateHistory.put(stateString, numberFold + 1);
         }
     }
 
     private boolean threefoldRepetition() {
-        Integer numberFold =  stateHistory.getOrDefault(stateString, 0);
+        Integer numberFold = stateHistory.getOrDefault(stateString, 0);
         numberFold = numberFold != null ? numberFold : 0;
         return numberFold >= 3;
     }
@@ -159,8 +167,10 @@ public class GameState implements Serializable {
     }
 
     public void timerTick() {
-        if (this.currentPlayer == EPlayer.BLACK) this.blackTimerTick();
-        else if (this.currentPlayer == EPlayer.WHITE) this.whiteTimerTick();
+        if (this.currentPlayer == EPlayer.BLACK)
+            this.blackTimerTick();
+        else if (this.currentPlayer == EPlayer.WHITE)
+            this.whiteTimerTick();
     }
 
     // run black timer

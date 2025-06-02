@@ -418,21 +418,34 @@ public class MatchService {
         try {
             document = getDataService.GetDataSnapShot("Match", request.getCurrentMatchId());
         } catch (InterruptedException | ExecutionException e) {
-
             throw e;
         }
+
         if (!document.exists()) {
             throw new Exception("Match not found");
         }
-        Match match = document.toObject(Match.class);
-        if (match == null) {
-            throw new Exception("Err");
-        }
-        match.setNumberOfTurns(match.getNumberOfTurns() + 1);
-        fireBaseMatchRepository.saveMatch(match);
-        simpMessagingTemplate.convertAndSend("/topic/chess/move/" + request.getCurrentMatchId(),
-                request.getGameState());
 
+        String playerWhitePath = document.getString("playerWhite");
+        String playerBlackPath = document.getString("playerBlack");
+
+        // Tạo MatchReferenceModel
+        Map<String, Object> updates = new HashMap<>();
+
+        updates.put("matchId", document.getString("matchId"));
+        updates.put("matchState", EMatchState.valueOf(document.getString("matchState")).name());
+        Date utilDate = document.getDate("matchTime");
+        updates.put("matchTime", (utilDate != null) ? new Date(utilDate.getTime()) : null);
+        updates.put("matchType", EMatchType.valueOf(document.getString("matchType")).name());
+        updates.put("numberOfTurns", document.getLong("numberOfTurns").intValue() + 1); // tăng lượt đi
+        updates.put("playTime", document.getLong("playTime").intValue());
+        updates.put("playerWhite", playerWhitePath); // DocumentReference đúng kiểu
+        updates.put("playerBlack", playerBlackPath); // DocumentReference đúng kiểu
+
+        firestore.collection("Match").document(document.getString("matchId")).update(updates);
+        String chessMoveTopic = "/topic/chess/move/" + request.getCurrentMatchId();
+        System.out.println("Sending move message to topic: " + chessMoveTopic);
+        System.out.println("Move request: " + request);
+        simpMessagingTemplate.convertAndSend(chessMoveTopic, request);
     }
 
     public void StartGame(MatchResponse matchResponse) throws InterruptedException, ExecutionException, Exception {

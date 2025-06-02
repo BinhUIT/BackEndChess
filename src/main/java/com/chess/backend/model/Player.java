@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Player implements Comparable<Player>{
+public class Player implements Comparable<Player> {
     private String playerId;
     private String email;
     private String playerName;
@@ -29,17 +29,19 @@ public class Player implements Comparable<Player>{
         double rating = (double) win / matches;
         return (double) Math.round(rating * 100.0) / 100.0;
     }
-    public String getId(){
+
+    public String getId() {
         return playerId;
     }
+
     @Override
     public int compareTo(Player b) {
-        if(this.score>b.score) {
+        if (this.score > b.score) {
             return -1;
-        } 
-        if(this.score<b.score) {
+        }
+        if (this.score < b.score) {
             return 1;
-        } 
+        }
         return 0;
     }
 }

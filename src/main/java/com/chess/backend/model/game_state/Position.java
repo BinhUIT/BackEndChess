@@ -1,15 +1,11 @@
 package com.chess.backend.model.game_state;
 
+import java.io.Serializable;
 import org.springframework.lang.Contract;
-
-
 import com.google.firebase.internal.NonNull;
 
+public record Position(int row, int column) implements Serializable {
 
-
-public record Position(int row, int column) {
-
-    
     public EPlayer getSquareColor() {
         if ((row + column) % 2 == 0) {
             return EPlayer.WHITE;

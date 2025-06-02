@@ -37,7 +37,7 @@ public class FireBaseMatchRepository implements MatchRepository {
     }
 
     @Override
-    public void saveMatch(Match match) {
+    public void saveMatch(MatchReferenceModel match) {
         DocumentReference addedDocRef = dbFirestore.collection(COLLECTION_NAME).document(match.getMatchId());
         ApiFuture<WriteResult> writeResult = addedDocRef.set(match);
         try {
@@ -48,7 +48,7 @@ public class FireBaseMatchRepository implements MatchRepository {
     }
 
     @Override
-    public void updateMatch(Match match) {
+    public void updateMatch(MatchReferenceModel match) {
 
     }
 

@@ -10,14 +10,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
+@ToString
 public class MoveRequest implements Serializable {
     private ESocketMessageType messageType;
     private String currentMatchId;
-    private GameState gameState;
+    private Object gameState;
 }

@@ -1,10 +1,15 @@
 package com.chess.backend.model.game_state;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import lombok.ToString;
 
 import com.chess.backend.model.move.EnPassant;
 import com.chess.backend.model.pieces.Bishop;
@@ -16,8 +21,14 @@ import com.chess.backend.model.pieces.Piece;
 import com.chess.backend.model.pieces.Queen;
 import com.chess.backend.model.pieces.Rook;
 
-public class Board {
-     private final Piece[][] pieces = new Piece[8][8];
+@ToString
+public class Board implements Serializable {
+    @SerializedName("pieces")
+    @Expose
+    private final Piece[][] pieces = new Piece[8][8];
+
+    @SerializedName("pawnSkipPositions")
+    @Expose
     private final Map<EPlayer, Position> pawnSkipPositions = new HashMap<>();
 
     public Board() {
@@ -183,7 +194,8 @@ public class Board {
 
     private boolean hasPawnInPosition(EPlayer player, Position[] pawnPositions, Position skipPos) {
         for (Position pos : pawnPositions) {
-            if (!isInside(pos)) continue;
+            if (!isInside(pos))
+                continue;
 
             Piece piece = getPiece(pos);
             if (piece == null || piece.getPlayerColor() != player || piece.getType() != EPieceType.PAWN) {
@@ -198,6 +210,7 @@ public class Board {
 
         return false;
     }
+
     // Counting methods
     public Counting countPieces() {
         Counting counting = new Counting();

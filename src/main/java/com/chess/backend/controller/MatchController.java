@@ -18,7 +18,6 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.chess.backend.ServerApplication;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 import com.chess.backend.model.enums.EMatchType;
