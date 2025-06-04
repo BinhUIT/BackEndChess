@@ -7,4 +7,6 @@ public enum ESocketMessageType {
   MOVE,
   RESIGN,
   DRAW_OFFER,
+  ACCEPT_DRAW_OFFER,
+  REJECT_DRAW_OFFER
 }
