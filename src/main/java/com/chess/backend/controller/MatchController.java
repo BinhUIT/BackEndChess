@@ -227,7 +227,11 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/destroyMatch/{matchId}")
-    public void destroyMatch(@DestinationVariable String matchId) {
+    public void destroyMatch(@DestinationVariable String matchId) throws InterruptedException, ExecutionException {
+        Match match = matchService.getMatchByIdAsync(matchId).get();
+        if (match == null)
+            messagingTemplate.convertAndSend("/topic/match/" + matchId + "/error", "Phòng hiện tại không còn");
+        matchService.deleteMatch(matchId);
         messagingTemplate.convertAndSend("/topic/match/" + matchId, "destroyed");
     }
 }

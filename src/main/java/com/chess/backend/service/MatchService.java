@@ -301,11 +301,7 @@ public class MatchService {
             }
 
             // Cập nhật trạng thái match
-            boolean isNowFull = !Strings.isNullOrEmpty(playerWhitePath) && !Strings.isNullOrEmpty(playerBlackPath);
-            EMatchState newState = isNowFull
-                    ? EMatchState.IN_PROGRESS
-                    : EMatchState.WAITING_FOR_PLAYER;
-            updates.put("matchState", newState.toString());
+            updates.put("matchState", EMatchState.IN_PROGRESS);
 
             // Cập nhật dữ liệu trong Firebase
             firestore.collection("Match").document(matchId).update(updates);
@@ -313,7 +309,7 @@ public class MatchService {
             // Tạo và trả về đối tượng Match
             MatchReferenceModel matchReferenceModel = new MatchReferenceModel();
             matchReferenceModel.setMatchId(matchId);
-            matchReferenceModel.setMatchState(newState);
+            matchReferenceModel.setMatchState(EMatchState.IN_PROGRESS);
             matchReferenceModel.setNumberOfTurns(document.getLong("numberOfTurns").intValue());
             matchReferenceModel.setMatchTime(document.getDate("matchTime"));
             matchReferenceModel.setPlayTime(document.getLong("playTime").intValue());
@@ -534,5 +530,9 @@ public class MatchService {
         // tra match ve kenh
         response.setMatchState(EMatchState.WAITING_FOR_PLAYER.toString());
         return response;
+    }
+
+    public void deleteMatch(String matchId) throws ExecutionException, InterruptedException{
+        firestore.collection("Match").document(matchId).delete();
     }
 }
