@@ -1,5 +1,6 @@
 package com.chess.backend.controller;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ import com.chess.backend.model.enums.EMatchType;
 import com.chess.backend.request.CancelMatchRequest;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
+import com.chess.backend.request.EndMatchRequest;
 import com.chess.backend.request.JoinMatchRequest;
 import com.chess.backend.request.MoveRequest;
 import com.chess.backend.response.MatchResponse;
@@ -233,5 +235,17 @@ public class MatchController {
             messagingTemplate.convertAndSend("/topic/match/" + matchId + "/error", "Phòng hiện tại không còn");
         matchService.deleteMatch(matchId);
         messagingTemplate.convertAndSend("/topic/match/" + matchId, "destroyed");
+    }
+
+    @MessageMapping("/chess/endMatch/{matchId}")
+    public void endMatch(EndMatchRequest request ) throws InterruptedException, ExecutionException {
+        String matchId = request.getMatchId();
+        boolean endMatchActibity = matchService.endMatch(request);
+        if(endMatchActibity){
+            if(request.getType()=="PRIVATE")
+            messagingTemplate.convertAndSend("/topic/match/" + matchId ,"Match is completed");
+            else
+            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
+        }
     }
 }

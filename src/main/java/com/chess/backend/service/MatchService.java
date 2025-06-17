@@ -1,5 +1,7 @@
 package com.chess.backend.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,8 +28,10 @@ import com.chess.backend.repository.FireBaseMatchRepository;
 import com.chess.backend.repository.FireBasePlayerRepository;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
+import com.chess.backend.request.EndMatchRequest;
 import com.chess.backend.request.MoveRequest;
 import com.chess.backend.response.MatchResponse;
+import com.fasterxml.jackson.annotation.JacksonInject.Value;
 import com.google.api.client.util.Strings;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
@@ -61,7 +65,6 @@ public class MatchService {
         List<Match> listMatch = new ArrayList<>();
         FromListQueryDocumentSnapShotToList(listSnapshots, listMatch);
         return listMatch;
-
     }
 
     public List<Match> GetMatchesOfPlayer(String playerId) throws InterruptedException, ExecutionException {
@@ -532,7 +535,84 @@ public class MatchService {
         return response;
     }
 
-    public void deleteMatch(String matchId) throws ExecutionException, InterruptedException{
+    public void deleteMatch(String matchId) throws ExecutionException, InterruptedException {
         firestore.collection("Match").document(matchId).delete();
+    }
+
+    public boolean endMatch(EndMatchRequest request) throws InterruptedException, ExecutionException {
+        return firestore.runTransaction(transaction -> {
+            DocumentSnapshot match = getDataService.GetDataSnapShot("Match", request.getMatchId());
+
+            Map<String, Object> update = new HashMap<>();
+            update.put("MatchState", request.getResult());
+            String playerWhiteId = extractPlayerIdFromPath(match.getString("playerWhite"));
+            String playerBlackId = extractPlayerIdFromPath(match.getString("playerBlack"));
+
+            if (request.getType().equals("RANKED")) {
+                DocumentSnapshot playerWhite = getDataService.GetDataSnapShot("User", playerWhiteId);
+                DocumentSnapshot playerBlack = getDataService.GetDataSnapShot("User", playerBlackId);
+
+                Long BlackElo = playerBlack.getLong("score");
+                Long WhiteElo = playerWhite.getLong("score");
+
+                if (BlackElo == null)
+                    BlackElo = (long) 0;
+                if (WhiteElo == null)
+                    WhiteElo = (long) 0;
+
+                int BlackK = getCoefficientK(BlackElo);
+                int WhiteK = getCoefficientK(WhiteElo);
+
+                BigDecimal EBlack = new BigDecimal(Math.pow(10, BlackElo / 400)).setScale(3, RoundingMode.HALF_UP);
+                BigDecimal EWhite = new BigDecimal(Math.pow(10, WhiteElo / 400)).setScale(3, RoundingMode.HALF_UP);
+
+                // Gắn mặc định là điểm hiện tại
+                Long newBlackScore = BlackElo;
+                Long newWhiteScore = WhiteElo;
+
+                if (request.getResult() == EMatchState.BLACK_WIN) {
+                    double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 1);
+                    double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0);
+                    newBlackScore = Math.round(BlackElo + blackChange);
+                    newWhiteScore = Math.round(WhiteElo + whiteChange);
+                } else if (request.getResult() == EMatchState.WHITE_WIN) {
+                    double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0);
+                    double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 1);
+                    newBlackScore = Math.round(BlackElo + blackChange);
+                    newWhiteScore = Math.round(WhiteElo + whiteChange);
+                } else if (request.getResult() == EMatchState.DRAW) {
+                    double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0.5);
+                    double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0.5);
+                    newBlackScore = Math.round(BlackElo + blackChange);
+                    newWhiteScore = Math.round(WhiteElo + whiteChange);
+                }
+                updateScore(playerBlack, newBlackScore);
+                updateScore(playerWhite, newWhiteScore);
+
+                getDataService.updateAllUserRanks();
+            }
+
+            return true;
+        }).get();
+    }
+    //Lấy hệ số theo số điểm
+    public int getCoefficientK(Long score) {
+        if (score <= 1600)
+            return 25;
+        if (score <= 2000)
+            return 20;
+        if (score < 2400)
+            return 15;
+        return 10;
+    }
+
+    //Tính điểm thay đổi
+    public double calculatePoint(double E, int K, double A) {
+        return K * (A - E);
+    }
+
+    public void updateScore(DocumentSnapshot player, Long point) {
+        Map<String,Object> updatePlayer = new HashMap<>();
+        updatePlayer.put("score", point);
     }
 }
