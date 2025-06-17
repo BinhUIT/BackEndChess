@@ -238,14 +238,21 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/endMatch/{matchId}")
-    public void endMatch(EndMatchRequest request ) throws InterruptedException, ExecutionException {
+    public void endMatch(EndMatchRequest request) throws InterruptedException, ExecutionException {
+        try{
         String matchId = request.getMatchId();
-        boolean endMatchActibity = matchService.endMatch(request);
-        if(endMatchActibity){
-            if(request.getType()=="PRIVATE")
-            messagingTemplate.convertAndSend("/topic/match/" + matchId ,"Match is completed");
-            else
+        matchService.endMatch(request);
+        if (request.getType() == "PRIVATE")
+            messagingTemplate.convertAndSend("/topic/match/" + matchId, "Match is completed");
+        else
             messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
+        }catch(Exception exception){
+            String matchId = request.getMatchId();
+            if (request.getType() == "PRIVATE")
+            messagingTemplate.convertAndSend("/topic/match/" + matchId+ "/error", exception.getMessage());
+        else
+            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId+ "/error", exception.getMessage());
         }
+
     }
 }
