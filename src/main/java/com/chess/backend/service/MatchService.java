@@ -545,7 +545,7 @@ public class MatchService {
         }
 
         Map<String, Object> update = new HashMap<>();
-        update.put("matchState", request.getResult());
+        update.put("matchState", request.getResult().toString());
         String playerWhiteId = extractPlayerIdFromPath(match.getString("playerWhite"));
         String playerBlackId = extractPlayerIdFromPath(match.getString("playerBlack"));
 
@@ -576,24 +576,29 @@ public class MatchService {
                 double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
+                updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 1);
+                updatePlayer(playerWhite, newWhiteScore, request.getMatchId(), 0);
             } else if (request.getResult().equals(EMatchState.WHITE_WIN)) {
                 double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0);
                 double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 1);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
+                updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 0);
+                updatePlayer(playerWhite, newWhiteScore, request.getMatchId(), 1);
             } else if (request.getResult().equals(EMatchState.DRAW)) {
                 double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0.5);
                 double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0.5);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
+                updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 0);
+                updatePlayer(playerWhite, newWhiteScore, request.getMatchId(), 0);
             }
-            updateScore(playerBlack, newBlackScore, request.getMatchId());
-            updateScore(playerWhite, newWhiteScore, request.getMatchId());
 
             getDataService.updateAllUserRanks();
-            //update match
-            firestore.collection("Match").document(request.getMatchId()).update(update);
+            // update match
         }
+        firestore.collection("Match").document(request.getMatchId()).update(update);
+
     }
 
     // Lấy hệ số theo số điểm
@@ -612,9 +617,20 @@ public class MatchService {
         return K * (A - E);
     }
 
-    public void updateScore(DocumentSnapshot player, Long point, String matchId) {
+    public void updatePlayer(DocumentSnapshot player, Long point, String matchId, int isWinner) {
         Map<String, Object> updatePlayer = new HashMap<>();
-        updatePlayer.put("score", point);
+        Long matches = player.getLong("matches") + 1;
+        Long win = player.getLong("win") + isWinner;
+        if (point < 0)
+            updatePlayer.put("score", 0);
+        else
+            updatePlayer.put("score", point);
+
+        updatePlayer.put("matches", matches);
+        updatePlayer.put("win", win);
+
         firestore.collection("User").document(player.getString("playerId")).update(updatePlayer);
+
+        System.out.println("Updating player " + player.getId() + " to score " + point);
     }
 }

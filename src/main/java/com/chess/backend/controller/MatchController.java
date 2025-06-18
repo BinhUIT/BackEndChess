@@ -237,8 +237,11 @@ public class MatchController {
         messagingTemplate.convertAndSend("/topic/match/" + matchId, "destroyed");
     }
 
-    @MessageMapping("/chess/endMatch/{matchId}")
+    @MessageMapping("/chess/endMatch")
     public void endMatch(EndMatchRequest request) throws InterruptedException, ExecutionException {
+        System.out.println("Request ket thuc tran dau -------------------");
+        System.out.println(request);
+
         try{
         String matchId = request.getMatchId();
         matchService.endMatch(request);
