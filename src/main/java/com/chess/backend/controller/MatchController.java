@@ -238,24 +238,23 @@ public class MatchController {
     }
 
     @MessageMapping("/chess/endMatch")
-    public void endMatch(EndMatchRequest request) throws InterruptedException, ExecutionException {
+    public void endMatch(@Payload EndMatchRequest request) throws InterruptedException, ExecutionException {
         System.out.println("Request ket thuc tran dau -------------------");
         System.out.println(request);
 
         try{
         String matchId = request.getMatchId();
         matchService.endMatch(request);
-        if (request.getType() == "PRIVATE")
+        if (request.getType().equals("PRIVATE"))
             messagingTemplate.convertAndSend("/topic/match/" + matchId, "Match is completed");
         else
             messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
         }catch(Exception exception){
             String matchId = request.getMatchId();
-            if (request.getType() == "PRIVATE")
-            messagingTemplate.convertAndSend("/topic/match/" + matchId+ "/error", exception.getMessage());
+            if (request.getType().equals("PRIVATE"))
+            messagingTemplate.convertAndSend("/topic/match/" + matchId+ "/error", exception.getMessage()!=null ? exception.getMessage() : "Không xác định");
         else
-            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId+ "/error", exception.getMessage());
+            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId+ "/error",  exception.getMessage()!=null ? exception.getMessage() : "Không xác định");
         }
-
     }
 }

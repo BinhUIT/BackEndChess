@@ -545,7 +545,7 @@ public class MatchService {
         }
 
         Map<String, Object> update = new HashMap<>();
-        update.put("matchState", request.getResult().toString());
+        update.put("matchState", request.getResult());
         String playerWhiteId = extractPlayerIdFromPath(match.getString("playerWhite"));
         String playerBlackId = extractPlayerIdFromPath(match.getString("playerBlack"));
 
@@ -624,13 +624,13 @@ public class MatchService {
         if (point < 0)
             updatePlayer.put("score", 0);
         else
-            updatePlayer.put("score", point);
+            updatePlayer.put("score", 10);
 
         updatePlayer.put("matches", matches);
         updatePlayer.put("win", win);
 
-        firestore.collection("User").document(player.getString("playerId")).update(updatePlayer);
+        firestore.collection("User").document(player.getId()).update(updatePlayer);
 
-        System.out.println("Updating player " + player.getId() + " to score " + point);
+        System.out.println("Updating player --------------- " + player.getId() + " to score -----------" + point);
     }
 }
