@@ -591,6 +591,8 @@ public class MatchService {
             updateScore(playerWhite, newWhiteScore, request.getMatchId());
 
             getDataService.updateAllUserRanks();
+            //update match
+            firestore.collection("Match").document(request.getMatchId()).update(update);
         }
     }
 
@@ -613,6 +615,6 @@ public class MatchService {
     public void updateScore(DocumentSnapshot player, Long point, String matchId) {
         Map<String, Object> updatePlayer = new HashMap<>();
         updatePlayer.put("score", point);
-        firestore.collection("Match").document(matchId).update(updatePlayer);
+        firestore.collection("User").document(player.getString("playerId")).update(updatePlayer);
     }
 }
