@@ -1,5 +1,6 @@
 package com.chess.backend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -43,20 +44,18 @@ public class GetDataService {
     }
 
     public void updateAllUserRanks() throws InterruptedException, ExecutionException {
-        List<QueryDocumentSnapshot> users = GetAllDocumentSnapshot("User");
+        List<QueryDocumentSnapshot> users = new ArrayList<>(GetAllDocumentSnapshot("User"));
 
-        // Sắp xếp giảm dần theo "score"
         users.sort((u1, u2) -> {
             Long score1 = u1.contains("score") ? u1.getLong("score") : 0L;
             Long score2 = u2.contains("score") ? u2.getLong("score") : 0L;
-            return Long.compare(score2, score1); // score giảm dần
+            return Long.compare(score2, score1);
         });
 
-        // Cập nhật rank cho từng user
         for (int i = 0; i < users.size(); i++) {
             QueryDocumentSnapshot user = users.get(i);
             int rank = i + 1;
-            String userId = user.getId(); // document ID
+            String userId = user.getId();
             Map<String, Object> data = Map.of("rank", rank);
             fireStore.collection("User").document(userId).update(data);
         }

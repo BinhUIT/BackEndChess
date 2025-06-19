@@ -251,6 +251,7 @@ public class MatchController {
             messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
         }catch(Exception exception){
             String matchId = request.getMatchId();
+            exception.printStackTrace();
             if (request.getType().equals("PRIVATE"))
             messagingTemplate.convertAndSend("/topic/match/" + matchId+ "/error", exception.getMessage()!=null ? exception.getMessage() : "Không xác định");
         else

@@ -23,15 +23,18 @@ import com.chess.backend.model.game_state.Board;
 import com.chess.backend.model.game_state.EPlayer;
 import com.chess.backend.model.game_state.GameState;
 import com.chess.backend.referencemodel.MatchReferenceModel;
+import com.chess.backend.referencemodel.MatchSnapshot;
 import com.chess.backend.repository.FireBaseMatchRepository;
 import com.chess.backend.repository.FireBasePlayerRepository;
 import com.chess.backend.request.ChatRequest;
 import com.chess.backend.request.CreateMatchRequest;
 import com.chess.backend.request.EndMatchRequest;
 import com.chess.backend.request.MoveRequest;
+import com.chess.backend.response.MatchHistory;
 import com.chess.backend.response.MatchResponse;
 import com.google.api.client.util.Strings;
 import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
@@ -50,6 +53,8 @@ public class MatchService {
 
     @Autowired
     private final FireBasePlayerRepository playerRepository;
+    @Autowired
+    private final PlayerService playerService;
 
     @Autowired
     private final FireBaseMatchRepository fireBaseMatchRepository;
@@ -61,21 +66,43 @@ public class MatchService {
         List<QueryDocumentSnapshot> listSnapshots = getDataService.GetAllDocumentSnapshot("Match");
 
         List<Match> listMatch = new ArrayList<>();
-        FromListQueryDocumentSnapShotToList(listSnapshots, listMatch);
+
         return listMatch;
     }
 
-    public List<Match> GetMatchesOfPlayer(String playerId) throws InterruptedException, ExecutionException {
-        List<Match> res = new ArrayList<>();
-        DocumentReference playerRef = firestore.collection("User").document(playerId);
-        ApiFuture<QuerySnapshot> query = firestore.collection("Match").whereEqualTo("playerWhite", playerRef).get();
-        List<QueryDocumentSnapshot> listQuerySnapShot = query.get().getDocuments();
-        FromListQueryDocumentSnapShotToList(listQuerySnapShot, res);
-        query = firestore.collection("Match").whereEqualTo("playerBlack", playerRef).get();
-        listQuerySnapShot = query.get().getDocuments();
-        FromListQueryDocumentSnapShotToList(listQuerySnapShot, res);
-        return res;
+    public List<MatchHistory> GetMatchesOfPlayer(String playerId) throws InterruptedException, ExecutionException {
+        List<MatchHistory> res = new ArrayList<>();
+        CollectionReference matches = firestore.collection("Match");
 
+        QuerySnapshot whiteSnap = matches.whereEqualTo("playerWhite", playerId).get().get();
+        for (QueryDocumentSnapshot doc : whiteSnap.getDocuments()) {
+            MatchSnapshot matchSnapshot = doc.toObject(MatchSnapshot.class);
+            res.add(convertSnaphotToMatchHistory(matchSnapshot));
+        }
+
+        QuerySnapshot blackSnap = matches.whereEqualTo("playerBlack", playerId).get().get();
+        for (QueryDocumentSnapshot doc : blackSnap.getDocuments()) {
+            MatchSnapshot matchSnapshot = doc.toObject(MatchSnapshot.class);
+            res.add(convertSnaphotToMatchHistory(matchSnapshot));
+        }
+        return res;
+    }
+
+    public MatchHistory convertSnaphotToMatchHistory ( MatchSnapshot matchSnapshot) throws InterruptedException, ExecutionException{
+            MatchHistory matchHistory = new MatchHistory();
+            matchHistory.setMatchId(matchSnapshot.getMatchId());
+            matchHistory.setMatchState(matchSnapshot.getMatchState());
+            matchHistory.setMatchType(matchSnapshot.getMatchType());
+            matchHistory.setMatchTime(matchSnapshot.getMatchTime());
+            matchHistory.setNumberOfTurns(matchSnapshot.getNumberOfTurns());
+            matchHistory.setPlayTime(matchSnapshot.getPlayTime());
+
+            Player playerWhite = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerWhite()));
+            Player playerBlack = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerBlack()));
+            matchHistory.setPlayerWhite(playerWhite);
+            matchHistory.setPlayerBlack(playerBlack);
+
+            return matchHistory;
     }
 
     public void FromListQueryDocumentSnapShotToList(List<QueryDocumentSnapshot> listQueryDocumentSnapshots,
@@ -538,6 +565,8 @@ public class MatchService {
     }
 
     public void endMatch(EndMatchRequest request) throws InterruptedException, ExecutionException {
+        System.out.println("Vao service endMatch voi request: " + request);
+
         DocumentSnapshot match = getDataService.GetDataSnapShot("Match", request.getMatchId());
 
         if (match == null || !match.exists()) {
@@ -548,6 +577,9 @@ public class MatchService {
         update.put("matchState", request.getResult());
         String playerWhiteId = extractPlayerIdFromPath(match.getString("playerWhite"));
         String playerBlackId = extractPlayerIdFromPath(match.getString("playerBlack"));
+
+        System.out.println("ID cua playerWhite ----------- " + playerBlackId);
+        System.out.println("ID cua playerBlack ----------- " + playerWhiteId);
 
         if (request.getType().equals("RANKED")) {
             DocumentSnapshot playerWhite = getDataService.GetDataSnapShot("User", playerWhiteId);
@@ -564,30 +596,39 @@ public class MatchService {
             int BlackK = getCoefficientK(BlackElo);
             int WhiteK = getCoefficientK(WhiteElo);
 
-            BigDecimal EBlack = new BigDecimal(Math.pow(10, BlackElo / 400)).setScale(3, RoundingMode.HALF_UP);
-            BigDecimal EWhite = new BigDecimal(Math.pow(10, WhiteElo / 400)).setScale(3, RoundingMode.HALF_UP);
+            double EBlack = 1.0 / (1.0 + Math.pow(10, (WhiteElo - BlackElo) / 400.0));
+            double EWhite = 1.0 / (1.0 + Math.pow(10, (BlackElo - WhiteElo) / 400.0));
+
+            System.out.println("Hệ số E của playerWhite----------" + EWhite);
+            System.out.println("Hệ số E của playerBlack----------" + EBlack);
 
             // Gắn mặc định là điểm hiện tại
             Long newBlackScore = BlackElo;
             Long newWhiteScore = WhiteElo;
 
-            if (request.getResult().equals(EMatchState.BLACK_WIN)) {
-                double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 1);
-                double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0);
+            if (request.getResult().equals(EMatchState.BLACK_WIN.toString())) {
+                double blackChange = calculatePoint(EBlack, BlackK, 1);
+                double whiteChange = calculatePoint(EWhite, WhiteK, 0);
+                System.out.println("Điểm số thay đổi cho playerWhite------------" + whiteChange);
+                System.out.println("Điểm số thay đổi cho playerBlack------------" + blackChange);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
                 updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 1);
                 updatePlayer(playerWhite, newWhiteScore, request.getMatchId(), 0);
-            } else if (request.getResult().equals(EMatchState.WHITE_WIN)) {
-                double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0);
-                double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 1);
+            } else if (request.getResult().equals(EMatchState.WHITE_WIN.toString())) {
+                double blackChange = calculatePoint(EBlack, BlackK, 0);
+                double whiteChange = calculatePoint(EWhite, WhiteK, 1);
+                System.out.println("Điểm số thay đổi cho playerWhite------------" + whiteChange);
+                System.out.println("Điểm số thay đổi cho playerBlack------------" + blackChange);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
                 updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 0);
                 updatePlayer(playerWhite, newWhiteScore, request.getMatchId(), 1);
-            } else if (request.getResult().equals(EMatchState.DRAW)) {
-                double blackChange = calculatePoint(EBlack.doubleValue(), BlackK, 0.5);
-                double whiteChange = calculatePoint(EWhite.doubleValue(), WhiteK, 0.5);
+            } else if (request.getResult().equals(EMatchState.DRAW.toString())) {
+                double blackChange = calculatePoint(EBlack, BlackK, 0.5);
+                double whiteChange = calculatePoint(EWhite, WhiteK, 0.5);
+                System.out.println("Điểm số thay đổi cho playerWhite------------" + whiteChange);
+                System.out.println("Điểm số thay đổi cho playerBlack------------" + blackChange);
                 newBlackScore = Math.round(BlackElo + blackChange);
                 newWhiteScore = Math.round(WhiteElo + whiteChange);
                 updatePlayer(playerBlack, newBlackScore, request.getMatchId(), 0);
@@ -613,24 +654,28 @@ public class MatchService {
     }
 
     // Tính điểm thay đổi
-    public double calculatePoint(double E, int K, double A) {
-        return K * (A - E);
+    public double calculatePoint(double E, double K, double A) {
+        return (double) K * (A - E);
     }
 
     public void updatePlayer(DocumentSnapshot player, Long point, String matchId, int isWinner) {
         Map<String, Object> updatePlayer = new HashMap<>();
-        Long matches = player.getLong("matches") + 1;
+        Long matches = player.getLong("matches") + 1L;
         Long win = player.getLong("win") + isWinner;
+        Long curPoint = player.getLong("score");
         if (point < 0)
-            updatePlayer.put("score", 0);
+            updatePlayer.put("score", 0L);
         else
-            updatePlayer.put("score", 10);
+            updatePlayer.put("score", point.longValue());
 
         updatePlayer.put("matches", matches);
         updatePlayer.put("win", win);
 
         firestore.collection("User").document(player.getId()).update(updatePlayer);
+        System.out.println("Update Player len FireStore---------------");
+        System.out.println(updatePlayer.toString());
 
-        System.out.println("Updating player --------------- " + player.getId() + " to score -----------" + point);
+        System.out.println("Updating player --------------- " + player.getId() + " from score " + curPoint
+                + " to score -----------" + point);
     }
 }

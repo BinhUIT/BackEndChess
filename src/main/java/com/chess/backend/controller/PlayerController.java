@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 import com.chess.backend.request.PlayerRegisterRequest;
 import com.chess.backend.request.PlayerUpdateRequest;
+import com.chess.backend.response.MatchHistory;
 import com.chess.backend.service.FirebaseAuthService;
 import com.chess.backend.service.MatchService;
 
@@ -116,11 +117,11 @@ public class PlayerController {
     }
 
     @GetMapping("/getMatches")
-    public ResponseEntity<List<Match>> GetMatch(@RequestHeader("Authorization") String tokenString) {
+    public ResponseEntity<List<MatchHistory>> GetMatch(@RequestHeader("Authorization") String tokenString) {
         String token = tokenString.substring(7);
         try {
             String userUID = firebaseAuthService.getUidFromToken(token);
-            List<Match> res = matchService.GetMatchesOfPlayer(userUID);
+            List<MatchHistory> res = matchService.GetMatchesOfPlayer("/User/"+userUID);
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (FirebaseAuthException e) {
             e.printStackTrace();
