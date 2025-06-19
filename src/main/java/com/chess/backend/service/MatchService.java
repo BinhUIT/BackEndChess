@@ -77,32 +77,41 @@ public class MatchService {
         QuerySnapshot whiteSnap = matches.whereEqualTo("playerWhite", playerId).get().get();
         for (QueryDocumentSnapshot doc : whiteSnap.getDocuments()) {
             MatchSnapshot matchSnapshot = doc.toObject(MatchSnapshot.class);
+            if (matchSnapshot.getPlayerBlack() == null) {
+                firestore.collection("Match").document(matchSnapshot.getMatchId()).delete();
+                continue;
+            }
             res.add(convertSnaphotToMatchHistory(matchSnapshot));
         }
 
         QuerySnapshot blackSnap = matches.whereEqualTo("playerBlack", playerId).get().get();
         for (QueryDocumentSnapshot doc : blackSnap.getDocuments()) {
             MatchSnapshot matchSnapshot = doc.toObject(MatchSnapshot.class);
+            if (matchSnapshot.getPlayerWhite() == null) {
+                firestore.collection("Match").document(matchSnapshot.getMatchId()).delete();
+                continue;
+            }
             res.add(convertSnaphotToMatchHistory(matchSnapshot));
         }
         return res;
     }
 
-    public MatchHistory convertSnaphotToMatchHistory ( MatchSnapshot matchSnapshot) throws InterruptedException, ExecutionException{
-            MatchHistory matchHistory = new MatchHistory();
-            matchHistory.setMatchId(matchSnapshot.getMatchId());
-            matchHistory.setMatchState(matchSnapshot.getMatchState());
-            matchHistory.setMatchType(matchSnapshot.getMatchType());
-            matchHistory.setMatchTime(matchSnapshot.getMatchTime());
-            matchHistory.setNumberOfTurns(matchSnapshot.getNumberOfTurns());
-            matchHistory.setPlayTime(matchSnapshot.getPlayTime());
+    public MatchHistory convertSnaphotToMatchHistory(MatchSnapshot matchSnapshot)
+            throws InterruptedException, ExecutionException {
+        MatchHistory matchHistory = new MatchHistory();
+        matchHistory.setMatchId(matchSnapshot.getMatchId());
+        matchHistory.setMatchState(matchSnapshot.getMatchState());
+        matchHistory.setMatchType(matchSnapshot.getMatchType());
+        matchHistory.setMatchTime(matchSnapshot.getMatchTime());
+        matchHistory.setNumberOfTurns(matchSnapshot.getNumberOfTurns());
+        matchHistory.setPlayTime(matchSnapshot.getPlayTime());
 
-            Player playerWhite = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerWhite()));
-            Player playerBlack = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerBlack()));
-            matchHistory.setPlayerWhite(playerWhite);
-            matchHistory.setPlayerBlack(playerBlack);
+        Player playerWhite = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerWhite()));
+        Player playerBlack = playerService.GetPlayerById(extractPlayerIdFromPath(matchSnapshot.getPlayerBlack()));
+        matchHistory.setPlayerWhite(playerWhite);
+        matchHistory.setPlayerBlack(playerBlack);
 
-            return matchHistory;
+        return matchHistory;
     }
 
     public void FromListQueryDocumentSnapShotToList(List<QueryDocumentSnapshot> listQueryDocumentSnapshots,
