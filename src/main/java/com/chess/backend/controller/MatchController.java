@@ -1,6 +1,5 @@
 package com.chess.backend.controller;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -242,20 +241,22 @@ public class MatchController {
         System.out.println("Request ket thuc tran dau -------------------");
         System.out.println(request);
 
-        try{
-        String matchId = request.getMatchId();
-        matchService.endMatch(request);
-        if (request.getType().equals("PRIVATE"))
-            messagingTemplate.convertAndSend("/topic/match/" + matchId, "Match is completed");
-        else
-            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
-        }catch(Exception exception){
+        try {
+            String matchId = request.getMatchId();
+            matchService.endMatch(request);
+            if (request.getType().equals("PRIVATE"))
+                messagingTemplate.convertAndSend("/topic/match/" + matchId, "Match is completed");
+            else
+                messagingTemplate.convertAndSend("/topic/rank-match/" + matchId, "Match is completed");
+        } catch (Exception exception) {
             String matchId = request.getMatchId();
             exception.printStackTrace();
             if (request.getType().equals("PRIVATE"))
-            messagingTemplate.convertAndSend("/topic/match/" + matchId+ "/error", exception.getMessage()!=null ? exception.getMessage() : "Không xác định");
-        else
-            messagingTemplate.convertAndSend("/topic/rank-match/" + matchId+ "/error",  exception.getMessage()!=null ? exception.getMessage() : "Không xác định");
+                messagingTemplate.convertAndSend("/topic/match/" + matchId + "/error",
+                        exception.getMessage() != null ? exception.getMessage() : "Không xác định");
+            else
+                messagingTemplate.convertAndSend("/topic/rank-match/" + matchId + "/error",
+                        exception.getMessage() != null ? exception.getMessage() : "Không xác định");
         }
     }
 }

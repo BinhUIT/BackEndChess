@@ -2,12 +2,10 @@ package com.chess.backend.config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import com.google.auth.oauth2.GoogleCredentials;
@@ -20,7 +18,7 @@ import jakarta.annotation.PostConstruct;
 public class FirebaseInitializer {
     @Value("${FIREBASE_KEY_PATH}")
     private String firebaseKeyPath;
-    
+
     @PostConstruct
     public void initialize() {
         try {
@@ -38,8 +36,7 @@ public class FirebaseInitializer {
         } catch (IOException e) {
             throw new RuntimeException("❌ Failed to initialize Firebase", e);
         }
-    
-        
+
     }
-    
+
 }

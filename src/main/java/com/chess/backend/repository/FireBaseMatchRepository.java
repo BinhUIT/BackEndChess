@@ -1,13 +1,10 @@
 package com.chess.backend.repository;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.config.Task;
 import org.springframework.stereotype.Repository;
 
 import com.chess.backend.model.Match;
@@ -15,7 +12,6 @@ import com.chess.backend.model.Player;
 import com.chess.backend.model.enums.EMatchState;
 import com.chess.backend.model.enums.EMatchType;
 import com.chess.backend.referencemodel.MatchReferenceModel;
-import com.chess.backend.service.GetDataService;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;

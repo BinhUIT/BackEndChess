@@ -16,7 +16,6 @@ import com.chess.backend.repository.FireBasePlayerRepository;
 import com.chess.backend.request.PlayerRegisterRequest;
 import com.chess.backend.request.PlayerUpdateRequest;
 import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -25,8 +24,8 @@ import com.google.firebase.auth.UserRecord;
 @Service
 public class PlayerService {
 
-    @Autowired
-    private Firestore firestore;
+    // @Autowired
+    // private Firestore firestore;
     @Autowired
     private GetDataService getDataService;
 

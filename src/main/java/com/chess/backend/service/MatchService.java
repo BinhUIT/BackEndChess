@@ -1,7 +1,5 @@
 package com.chess.backend.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,9 +31,7 @@ import com.chess.backend.request.MoveRequest;
 import com.chess.backend.response.MatchHistory;
 import com.chess.backend.response.MatchResponse;
 import com.google.api.client.util.Strings;
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.CollectionReference;
-import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
@@ -63,7 +59,8 @@ public class MatchService {
     private SimpMessagingTemplate simpMessagingTemplate;
 
     public List<Match> listMatch() throws InterruptedException, ExecutionException {
-        List<QueryDocumentSnapshot> listSnapshots = getDataService.GetAllDocumentSnapshot("Match");
+        // List<QueryDocumentSnapshot> listSnapshots =
+        // getDataService.GetAllDocumentSnapshot("Match");
 
         List<Match> listMatch = new ArrayList<>();
 

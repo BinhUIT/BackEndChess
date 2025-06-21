@@ -3,15 +3,12 @@ package com.chess.backend.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.chess.backend.config.FirebaseAuthInterceptor;
 import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 import com.chess.backend.model.enums.EMatchType;
@@ -25,8 +22,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MatchmakingService {
 
-    @Autowired
-    private final FirebaseAuthInterceptor firebaseAuthInterceptor;
+    // @Autowired
+    // private final FirebaseAuthInterceptor firebaseAuthInterceptor;
 
     private final List<QueuedRankPlayer> playerQueue = Collections.synchronizedList(new ArrayList<>());
 
@@ -99,7 +96,7 @@ public class MatchmakingService {
 
         int playerRank = player.getRank();
         Integer requestedPlayTime = currentQueuedPlayer.getPlayTime(); // Thời gian chơi mong muốn
-        EMatchType matchType = currentQueuedPlayer.getMatchType(); // Loại trận đấu
+        // EMatchType matchType = currentQueuedPlayer.getMatchType(); // Loại trận đấu
 
         int rankThreshold = 100; // Ngưỡng chênh lệch rank
 

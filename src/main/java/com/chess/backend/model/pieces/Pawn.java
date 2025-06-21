@@ -1,6 +1,5 @@
 package com.chess.backend.model.pieces;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,10 +13,10 @@ import com.chess.backend.model.move.Move;
 import com.chess.backend.model.move.NormalMove;
 import com.chess.backend.model.move.PawnPromotion;
 
-public class Pawn extends Piece implements Serializable {
+public class Pawn extends Piece {
     private final EPlayer color;
     private final Direction forward;
-    
+
     public Pawn(EPlayer color) {
         this.color = color;
         if (color == EPlayer.WHITE) {
@@ -26,36 +25,36 @@ public class Pawn extends Piece implements Serializable {
             this.forward = Direction.SOUTH;
         }
     }
-    
+
     @Override
     public EPieceType getType() {
         return EPieceType.PAWN;
     }
-    
+
     @Override
     public EPlayer getPlayerColor() {
         return color;
     }
-    
+
     @Override
     public Piece copy() {
         Pawn copy = new Pawn(color);
         copy.setHasMoved(getHasMoved());
         return copy;
     }
-    
+
     private boolean canMoveTo(Position pos, Board board) {
         return Board.isInside(pos) && board.isEmpty(pos);
     }
-    
+
     private boolean canCaptureAt(Position pos, Board board) {
         if (!Board.isInside(pos) || board.isEmpty(pos)) {
             return false;
         }
-        
+
         return board.getPiece(pos).getPlayerColor() != color;
     }
-    
+
     private List<Move> getPromotionMoves(Position from, Position to) {
         List<Move> moves = new ArrayList<>();
         moves.add(new PawnPromotion(from, to, EPieceType.KNIGHT));
@@ -64,10 +63,10 @@ public class Pawn extends Piece implements Serializable {
         moves.add(new PawnPromotion(from, to, EPieceType.QUEEN));
         return moves;
     }
-    
+
     private List<Move> getForwardMoves(Position from, Board board) {
         List<Move> moves = new ArrayList<>();
-        
+
         Position oneMovePos = from.plus(forward);
         if (canMoveTo(oneMovePos, board)) {
             if (oneMovePos.row() == 0 || oneMovePos.row() == 7) {
@@ -76,7 +75,7 @@ public class Pawn extends Piece implements Serializable {
             } else {
                 moves.add(new NormalMove(from, oneMovePos));
             }
-            
+
             // two squares forward if not moved
             if (!getHasMoved()) {
                 Position twoMovePos = oneMovePos.plus(forward);
@@ -85,17 +84,17 @@ public class Pawn extends Piece implements Serializable {
                 }
             }
         }
-        
+
         return moves;
     }
-    
+
     private List<Move> getDiagonalMoves(Position from, Board board) {
         List<Move> moves = new ArrayList<>();
-        
-        Direction[] dirs = {Direction.WEST, Direction.EAST};
+
+        Direction[] dirs = { Direction.WEST, Direction.EAST };
         for (Direction dir : dirs) {
             Position to = from.plus(forward).plus(dir);
-            
+
             if (to.equals(board.getPawnSkipPosition(color.getOpponent()))) {
                 moves.add(new EnPassant(from, to));
             } else if (canCaptureAt(to, board)) {
@@ -107,10 +106,10 @@ public class Pawn extends Piece implements Serializable {
                 }
             }
         }
-        
+
         return moves;
     }
-    
+
     @Override
     public List<Move> getMoves(Position from, Board board) {
         List<Move> moves = new ArrayList<>();
@@ -118,7 +117,7 @@ public class Pawn extends Piece implements Serializable {
         moves.addAll(getDiagonalMoves(from, board));
         return moves;
     }
-    
+
     @Override
     public boolean canCaptureOpponentKing(Position from, Board board) {
         for (Move move : getDiagonalMoves(from, board)) {
@@ -127,7 +126,7 @@ public class Pawn extends Piece implements Serializable {
                 return true;
             }
         }
-        
+
         return false;
     }
 }

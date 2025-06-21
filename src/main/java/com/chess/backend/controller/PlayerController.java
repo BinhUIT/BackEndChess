@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-import com.chess.backend.model.Match;
 import com.chess.backend.model.Player;
 
 import com.chess.backend.request.LoginRequest;
@@ -121,7 +120,7 @@ public class PlayerController {
         String token = tokenString.substring(7);
         try {
             String userUID = firebaseAuthService.getUidFromToken(token);
-            List<MatchHistory> res = matchService.GetMatchesOfPlayer("/User/"+userUID);
+            List<MatchHistory> res = matchService.GetMatchesOfPlayer("/User/" + userUID);
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (FirebaseAuthException e) {
             e.printStackTrace();
