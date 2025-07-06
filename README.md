@@ -6,7 +6,7 @@
 - Local : 2 Người chơi 1 máy, với các tính năng thử nghiệm mới : chế độ Critical Hit (quân cờ có tỉ lệ đi tiếp sau khi ăn quân cờ khác) và Emote System (hệ thống biểu cảm cho các quân cờ).<br>
 
 <h3>Mô hình kiến trúc</h3><br>
-![image](https://github.com/user-attachments/assets/cb350bba-f840-42a5-8b9c-5f84eaaaa45c)
+![image](src\main\resources\assets\architect.png)
 
 
 <h3>Quản lý thư mục</h3>
